@@ -4,4 +4,15 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "flask>=3.1.2",
+    "flask-dance>=7.1.0",
+    "flask-login>=0.6.3",
+    "flask-sqlalchemy>=3.1.1",
+    "gunicorn>=23.0.0",
+    "oauthlib>=3.3.1",
+    "psycopg2-binary>=2.9.11",
+    "pyjwt>=2.10.1",
+    "sqlalchemy>=2.0.44",
+    "werkzeug>=3.1.3",
+]

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form.title }} - Submissions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="submissions-header">
+        <h1>{{ form.title }}</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="form-info-box">
+        <p><strong>Description:</strong> {{ form.description or 'No description provided' }}</p>
+        <p><strong>Deadline:</strong> {{ form.deadline.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        <p><strong>Total Submissions:</strong> {{ submissions|length }}</p>
+    </div>
+
+    <section class="dashboard-section">
+        <h2>Submissions</h2>
+        {% if submissions %}
+            <div class="submissions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parent Name</th>
+                            <th>Email</th>
+                            <th>Submitted Date</th>
+                            <th>Additional Info</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                        <tr>
+                            <td>{{ submission.user.first_name }} {{ submission.user.last_name or '' }}</td>
+                            <td>{{ submission.user.email }}</td>
+                            <td>{{ submission.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                            <td>{{ submission.content or 'N/A' }}</td>
+                            <td>
+                                {% if submission.file_name %}
+                                    <a href="{{ url_for('download_file', submission_id=submission.id) }}" class="btn-small">
+                                        Download {{ submission.file_name }}
+                                    </a>
+                                {% else %}
+                                    No file
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No submissions yet for this form.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

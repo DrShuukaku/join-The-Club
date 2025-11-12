@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form.title }} - Submit Form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>{{ form.title }}</h1>
+        <p class="form-description">{{ form.description }}</p>
+        <div class="deadline-info">
+            <strong>Deadline:</strong> {{ form.deadline.strftime('%B %d, %Y at %I:%M %p') }}
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="submission-form">
+            <div class="form-group">
+                <label for="content">Additional Information:</label>
+                <textarea id="content" name="content" rows="6" placeholder="Enter any additional information or notes...">{{ submission.content if submission else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="file">Upload Document:</label>
+                <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                {% if submission and submission.file_name %}
+                    <div class="current-file">
+                        Current file: <a href="{{ url_for('download_file', submission_id=submission.id) }}">{{ submission.file_name }}</a>
+                    </div>
+                {% endif %}
+                <small>Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 16MB)</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">{% if submission %}Update{% else %}Submit{% endif %} Form</button>
+                <a href="{{ url_for('parent_dashboard') }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

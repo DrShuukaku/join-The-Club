@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Dashboard - School Paperwork{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <h1>Welcome, {{ current_user.first_name or 'Parent' }}!</h1>
+    
+    <section class="dashboard-section">
+        <h2>Pending Forms ({{ pending_forms|length }})</h2>
+        {% if pending_forms %}
+            <div class="forms-grid">
+                {% for form in pending_forms %}
+                    <div class="form-card">
+                        <h3>{{ form.title }}</h3>
+                        <p class="form-description">{{ form.description }}</p>
+                        <div class="form-meta">
+                            <span class="deadline {% if form.deadline < now() %}overdue{% endif %}">
+                                Due: {{ form.deadline.strftime('%B %d, %Y at %I:%M %p') }}
+                            </span>
+                        </div>
+                        <a href="{{ url_for('submit_form', form_id=form.id) }}" class="btn-primary">Submit Form</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No pending forms at this time.</p>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Submitted Forms ({{ completed_forms|length }})</h2>
+        {% if completed_forms %}
+            <div class="forms-grid">
+                {% for item in completed_forms %}
+                    <div class="form-card completed">
+                        <h3>{{ item.form.title }}</h3>
+                        <p class="form-description">{{ item.form.description }}</p>
+                        <div class="form-meta">
+                            <span class="submitted">Submitted: {{ item.submission.submitted_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <a href="{{ url_for('submit_form', form_id=item.form.id) }}" class="btn-secondary">View/Edit</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">You haven't submitted any forms yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

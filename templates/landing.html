@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="landing-hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Welcome to School Paperwork Portal</h1>
+            <p class="hero-subtitle">Streamline school paperwork submissions for parents and administrators</p>
+            <div class="hero-features">
+                <div class="feature">
+                    <div class="feature-icon">📝</div>
+                    <h3>Easy Submissions</h3>
+                    <p>Parents can submit required paperwork online with file uploads</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⏰</div>
+                    <h3>Deadline Tracking</h3>
+                    <p>Never miss a deadline with clear due date visibility</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">👨‍💼</div>
+                    <h3>Admin Management</h3>
+                    <p>Administrators can create forms and track submissions</p>
+                </div>
+            </div>
+            <a href="{{ url_for('replit_auth.login') }}" class="btn-hero">Get Started</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
