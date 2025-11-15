@@ -113,11 +113,13 @@ A web application designed for schools to manage paperwork submissions from pare
 
 **For Parents:**
 1. Navigate to "Labor Hours" in the navigation menu
-2. Click "Check In" and describe the task you'll be working on
+2. Click "Check In" and select from pre-defined task categories (or enter custom task)
 3. A unique QR code and verification code will be generated
 4. Work on your volunteer task
 5. Click "Check Out" when finished - hours are automatically calculated
 6. Show the QR code to an administrator for verification
+7. Export your service hours to CSV/Excel or print a service log report
+8. View monthly summaries of your volunteer work
 
 **For Administrators:**
 1. Navigate to "Labor Verification" in the navigation menu
@@ -125,6 +127,14 @@ A web application designed for schools to manage paperwork submissions from pare
 3. Review the work session details (parent name, task, hours)
 4. Verify or reject the labor hours with optional notes
 5. View pending and verified labor hours
+6. Access "Service Hours" dashboard to see all parents' volunteer hours
+
+### New Features (November 15, 2025)
+- **Pre-filled Service Categories**: 10 common volunteer tasks in dropdown menu
+- **Printable Service Log**: Generate printer-friendly reports of all service hours
+- **CSV/Excel Export**: Download service hours data as spreadsheet
+- **Monthly Summary Reports**: Automatic monthly breakdown of hours worked
+- **Admin Service Hours Dashboard**: View all parents' service hours in one centralized location
 
 ### Security Features
 - Timestamps are server-generated and cannot be manipulated
