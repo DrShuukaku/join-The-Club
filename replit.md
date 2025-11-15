@@ -100,7 +100,12 @@ A web application designed for schools to manage paperwork submissions from pare
 - `ADMIN_EMAILS`: **Required** - Comma-separated list of admin email addresses (must be set by user)
 
 ## Recent Changes
-- November 15, 2025: Added volunteer labor hours tracking system with QR code verification
+- November 15, 2025: 
+  - Added volunteer labor hours tracking system with QR code verification
+  - Implemented service log enhancements: pre-filled task categories, printable reports, CSV export, monthly summaries
+  - Created admin service hours dashboard for tracking all parents' volunteer hours
+  - **Fixed deployment readiness**: Configured PostgreSQL database, added lazy database initialization to prevent startup crashes, configured production deployment with gunicorn
+  - Changed "Login" button to "Admin" with grey styling
 - November 12, 2025: Initial application setup with full functionality
 - Implemented Replit Auth integration for secure user authentication
 - Created admin and parent portals with role-based access

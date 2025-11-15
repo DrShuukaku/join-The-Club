@@ -12,8 +12,8 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["python3", "main.py"]
-deploymentTarget = "cloudrun"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--workers=2", "main:app"]
+deploymentTarget = "autoscale"
 
 [agent]
 expertMode = true
@@ -54,3 +54,7 @@ externalPort = 3000
 [[ports]]
 localPort = 42797
 externalPort = 3001
+
+[[ports]]
+localPort = 43269
+externalPort = 3002
