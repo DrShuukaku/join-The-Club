@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Labor Hours Verification - Admin{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <h1>Volunteer Labor Verification</h1>
+    
+    <section class="dashboard-section">
+        <h2>📷 Scan QR Code or Enter Verification Code</h2>
+        <div class="scanner-container">
+            <div class="scanner-tabs">
+                <button class="tab-btn active" onclick="showTab('camera')">Camera Scanner</button>
+                <button class="tab-btn" onclick="showTab('manual')">Manual Entry</button>
+            </div>
+            
+            <div id="camera-tab" class="tab-content active">
+                <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 2rem auto;"></div>
+                <div id="qr-reader-results"></div>
+            </div>
+            
+            <div id="manual-tab" class="tab-content">
+                <form id="manual-verify-form" style="max-width: 400px; margin: 2rem auto;">
+                    <div class="form-group">
+                        <label for="verification_code">Enter Verification Code:</label>
+                        <input type="text" id="verification_code" name="verification_code" 
+                               placeholder="e.g., ABC123DEF456" 
+                               style="text-transform: uppercase; font-family: monospace; font-size: 1.2em;">
+                    </div>
+                    <button type="submit" class="btn-primary">Verify Code</button>
+                </form>
+            </div>
+            
+            <div id="verification-result" style="margin-top: 2rem;"></div>
+        </div>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Pending Verification ({{ pending_sessions|length }})</h2>
+        {% if pending_sessions %}
+            <div class="submissions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parent</th>
+                            <th>Task</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Hours</th>
+                            <th>Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in pending_sessions %}
+                        <tr>
+                            <td>{{ session.user.first_name }} {{ session.user.last_name or '' }}</td>
+                            <td>{{ session.task_description }}</td>
+                            <td>{{ session.check_in_time.strftime('%b %d, %I:%M %p') }}</td>
+                            <td>{{ session.check_out_time.strftime('%b %d, %I:%M %p') if session.check_out_time else 'N/A' }}</td>
+                            <td><strong>{{ session.hours_worked|round(2) if session.hours_worked else '0.00' }} hrs</strong></td>
+                            <td><code>{{ session.verification_code }}</code></td>
+                            <td>
+                                <button class="btn-small" onclick="showVerifyModal({{ session.id }}, '{{ session.user.first_name }} {{ session.user.last_name or '' }}', '{{ session.task_description }}', {{ session.hours_worked|round(2) if session.hours_worked else 0 }})">Verify/Reject</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No pending labor hours to verify.</p>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Recently Verified</h2>
+        {% if verified_sessions %}
+            <div class="submissions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parent</th>
+                            <th>Task</th>
+                            <th>Hours</th>
+                            <th>Status</th>
+                            <th>Verified Date</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in verified_sessions %}
+                        <tr>
+                            <td>{{ session.user.first_name }} {{ session.user.last_name or '' }}</td>
+                            <td>{{ session.task_description }}</td>
+                            <td>{{ session.hours_worked|round(2) if session.hours_worked else '0.00' }} hrs</td>
+                            <td>
+                                {% if session.status == 'verified' %}
+                                    <span class="badge badge-active">Verified</span>
+                                {% else %}
+                                    <span class="badge badge-inactive">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ session.admin_verified_at.strftime('%b %d, %Y') if session.admin_verified_at else 'N/A' }}</td>
+                            <td>{{ session.admin_notes or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No verified labor hours yet.</p>
+        {% endif %}
+    </section>
+</div>
+
+<div id="verifyModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeVerifyModal()">&times;</span>
+        <h2>Verify Labor Hours</h2>
+        <div id="modal-details"></div>
+        <form id="verify-form" method="POST" action="">
+            <div class="form-group">
+                <label for="notes">Admin Notes (optional):</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="Add any notes about this verification..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button type="submit" name="action" value="verify" class="btn-primary">✓ Verify Hours</button>
+                <button type="submit" name="action" value="reject" class="btn-danger">✗ Reject</button>
+                <button type="button" onclick="closeVerifyModal()" class="btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.scanner-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+}
+
+.scanner-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #7f8c8d;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+#modal-details {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+}
+
+#modal-details p {
+    margin-bottom: 0.5rem;
+}
+</style>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(tab + '-tab').classList.add('active');
+    event.target.classList.add('active');
+    
+    if (tab === 'camera' && !window.qrScanner) {
+        initQRScanner();
+    }
+}
+
+function initQRScanner() {
+    window.qrScanner = new Html5Qrcode("qr-reader");
+    
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+            window.qrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                document.getElementById('qr-reader-results').innerHTML = 
+                    '<div class="alert alert-danger">Error starting camera: ' + err + '</div>';
+            });
+        }
+    }).catch(err => {
+        document.getElementById('qr-reader-results').innerHTML = 
+            '<div class="alert alert-danger">No camera found. Please use manual entry.</div>';
+    });
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    const urlParts = decodedText.split('/');
+    const code = urlParts[urlParts.length - 1];
+    verifyCode(code);
+}
+
+function onScanFailure(error) {
+}
+
+document.getElementById('manual-verify-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const code = document.getElementById('verification_code').value.trim().toUpperCase();
+    if (code) {
+        verifyCode(code);
+    }
+});
+
+function verifyCode(code) {
+    fetch('/api/verify-code/' + code)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('verification-result').innerHTML = 
+                    '<div class="alert alert-danger">' + data.error + '</div>';
+            } else {
+                showVerifyModal(data.id, data.parent_name, data.task, data.hours);
+                document.getElementById('verification-result').innerHTML = 
+                    '<div class="alert alert-success">Code found! Review details above.</div>';
+            }
+        })
+        .catch(err => {
+            document.getElementById('verification-result').innerHTML = 
+                '<div class="alert alert-danger">Error verifying code.</div>';
+        });
+}
+
+function showVerifyModal(id, parent, task, hours) {
+    document.getElementById('modal-details').innerHTML = 
+        '<p><strong>Parent:</strong> ' + parent + '</p>' +
+        '<p><strong>Task:</strong> ' + task + '</p>' +
+        '<p><strong>Hours:</strong> ' + hours + ' hrs</p>';
+    
+    document.getElementById('verify-form').action = '/admin/labor/' + id + '/verify';
+    document.getElementById('verifyModal').style.display = 'block';
+}
+
+function closeVerifyModal() {
+    document.getElementById('verifyModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == document.getElementById('verifyModal')) {
+        closeVerifyModal();
+    }
+}
+
+if (document.getElementById('camera-tab').classList.contains('active')) {
+    initQRScanner();
+}
+</script>
+{% endblock %}

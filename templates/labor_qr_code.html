@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Labor Verification QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="qr-code-container">
+        <h1>Verification QR Code</h1>
+        
+        <div class="qr-info-box">
+            <p><strong>Task:</strong> {{ labor_session.task_description }}</p>
+            <p><strong>Started:</strong> {{ labor_session.check_in_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            {% if labor_session.check_out_time %}
+                <p><strong>Ended:</strong> {{ labor_session.check_out_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <p><strong>Hours Worked:</strong> {{ labor_session.hours_worked|round(2) }} hours</p>
+            {% endif %}
+            <p><strong>Status:</strong> 
+                {% if labor_session.status == 'checked_in' %}
+                    <span class="badge badge-active">Active Session</span>
+                {% elif labor_session.status == 'pending_verification' %}
+                    <span class="badge" style="background: #fff3cd; color: #856404;">Pending Admin Verification</span>
+                {% elif labor_session.status == 'verified' %}
+                    <span class="badge badge-active">Verified ✓</span>
+                {% else %}
+                    <span class="badge badge-inactive">Rejected</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="qr-code-display">
+            <img src="{{ url_for('generate_qr_code', labor_id=labor_session.id) }}" alt="QR Code" class="qr-image">
+            <div class="verification-code-display">
+                <p>Verification Code:</p>
+                <h2>{{ labor_session.verification_code }}</h2>
+                <small>Show this QR code or code to an administrator for verification</small>
+            </div>
+        </div>
+
+        <div class="qr-actions">
+            {% if labor_session.status == 'checked_in' %}
+                <form method="POST" action="{{ url_for('labor_check_out', labor_id=labor_session.id) }}" style="display: inline;">
+                    <button type="submit" class="btn-primary">Check Out Now</button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('parent_labor_hours') }}" class="btn-secondary">Back to Labor Hours</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.qr-code-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.qr-info-box {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.qr-info-box p {
+    margin-bottom: 0.75rem;
+}
+
+.qr-code-display {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+}
+
+.qr-image {
+    max-width: 300px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.verification-code-display {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.verification-code-display h2 {
+    font-size: 2.5rem;
+    font-family: monospace;
+    color: #2c3e50;
+    letter-spacing: 0.2em;
+    margin: 1rem 0;
+}
+
+.qr-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+</style>
+{% endblock %}

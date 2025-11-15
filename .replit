@@ -3,6 +3,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib"]
 
 [unitTest]
 language = "python3"
@@ -51,5 +52,5 @@ localPort = 41439
 externalPort = 3000
 
 [[ports]]
-localPort = 43955
-externalPort = 3001
+localPort = 41953
+externalPort = 3002

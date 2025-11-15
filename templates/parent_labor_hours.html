@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}My Labor Hours{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <h1>Volunteer Labor Hours</h1>
+    
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_hours|round(2) }}</div>
+            <div class="stat-label">Total Hours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ labor_records|selectattr('status', 'equalto', 'verified')|list|length }}</div>
+            <div class="stat-label">Verified Sessions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ labor_records|selectattr('status', 'equalto', 'pending_verification')|list|length }}</div>
+            <div class="stat-label">Pending Verification</div>
+        </div>
+    </div>
+
+    {% if active_session %}
+    <section class="dashboard-section" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+        <h2>🕐 Active Work Session</h2>
+        <div class="active-session">
+            <p><strong>Task:</strong> {{ active_session.task_description }}</p>
+            <p><strong>Started:</strong> {{ active_session.check_in_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            <p><strong>Verification Code:</strong> <code style="font-size: 1.2em; background: #fff; padding: 5px 10px; border-radius: 4px;">{{ active_session.verification_code }}</code></p>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <a href="{{ url_for('view_labor_qr', labor_id=active_session.id) }}" class="btn-primary">View QR Code</a>
+                <form method="POST" action="{{ url_for('labor_check_out', labor_id=active_session.id) }}" style="display: inline;">
+                    <button type="submit" class="btn-secondary">Check Out</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section class="dashboard-section">
+        <h2>Start New Work Session</h2>
+        <form method="POST" action="{{ url_for('labor_check_in') }}" class="submission-form">
+            <div class="form-group">
+                <label for="task_description">What task will you be working on?</label>
+                <input type="text" id="task_description" name="task_description" required 
+                       placeholder="e.g., Classroom cleaning, Event setup, Office assistance">
+            </div>
+            <button type="submit" class="btn-primary">Check In</button>
+        </form>
+    </section>
+    {% endif %}
+
+    <section class="dashboard-section">
+        <h2>Labor Hours History</h2>
+        {% if labor_records %}
+            <div class="submissions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Date</th>
+                            <th>Hours</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in labor_records %}
+                        <tr>
+                            <td>{{ record.task_description }}</td>
+                            <td>{{ record.check_in_time.strftime('%b %d, %Y') }}</td>
+                            <td>{{ record.hours_worked|round(2) if record.hours_worked else 'In progress' }}</td>
+                            <td>
+                                {% if record.status == 'checked_in' %}
+                                    <span class="badge badge-active">Active</span>
+                                {% elif record.status == 'pending_verification' %}
+                                    <span class="badge" style="background: #fff3cd; color: #856404;">Pending</span>
+                                {% elif record.status == 'verified' %}
+                                    <span class="badge badge-active">Verified</span>
+                                {% else %}
+                                    <span class="badge badge-inactive">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.status in ['checked_in', 'pending_verification'] %}
+                                    <a href="{{ url_for('view_labor_qr', labor_id=record.id) }}" class="btn-small">View QR</a>
+                                {% endif %}
+                                {% if record.admin_notes %}
+                                    <small style="display: block; margin-top: 5px; color: #666;">Note: {{ record.admin_notes }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No labor hours recorded yet. Start your first work session above!</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

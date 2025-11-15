@@ -11,6 +11,8 @@ A web application designed for schools to manage paperwork submissions from pare
 - Download submitted documents
 - Activate/deactivate forms
 - Track submission statistics
+- Verify parent volunteer labor hours via QR code or manual entry
+- Track and approve volunteer work sessions
 
 ### For Parents
 - View all assigned paperwork forms
@@ -18,6 +20,9 @@ A web application designed for schools to manage paperwork submissions from pare
 - Track submission deadlines
 - Update previously submitted forms
 - Download their own submitted documents
+- Log volunteer labor hours with check-in/check-out system
+- Generate QR codes for admin verification
+- View labor hours history and total hours contributed
 
 ## Technology Stack
 - **Backend**: Flask (Python)
@@ -63,6 +68,14 @@ A web application designed for schools to manage paperwork submissions from pare
 - Stores text content and file uploads (as binary data)
 - Tracks submission timestamp
 
+### LaborHours
+- Tracks parent volunteer work sessions
+- Unique verification code for each session
+- Check-in/check-out timestamps to prevent manipulation
+- QR code generation for easy admin verification
+- Admin verification with approval/rejection status
+- Calculates hours worked automatically
+
 ## Getting Started
 
 ### Initial Setup (IMPORTANT)
@@ -87,11 +100,38 @@ A web application designed for schools to manage paperwork submissions from pare
 - `ADMIN_EMAILS`: **Required** - Comma-separated list of admin email addresses (must be set by user)
 
 ## Recent Changes
+- November 15, 2025: Added volunteer labor hours tracking system with QR code verification
 - November 12, 2025: Initial application setup with full functionality
 - Implemented Replit Auth integration for secure user authentication
 - Created admin and parent portals with role-based access
 - Added file upload capability with database storage
 - Implemented deadline tracking and form management
+
+## Volunteer Labor Hours System
+
+### How It Works
+
+**For Parents:**
+1. Navigate to "Labor Hours" in the navigation menu
+2. Click "Check In" and describe the task you'll be working on
+3. A unique QR code and verification code will be generated
+4. Work on your volunteer task
+5. Click "Check Out" when finished - hours are automatically calculated
+6. Show the QR code to an administrator for verification
+
+**For Administrators:**
+1. Navigate to "Labor Verification" in the navigation menu
+2. Use camera to scan parent's QR code OR manually enter verification code
+3. Review the work session details (parent name, task, hours)
+4. Verify or reject the labor hours with optional notes
+5. View pending and verified labor hours
+
+### Security Features
+- Timestamps are server-generated and cannot be manipulated
+- Unique verification codes prevent fraud
+- QR codes contain encrypted verification data
+- Camera-based scanning for quick verification
+- Admin must explicitly approve each work session
 
 ## User Preferences
 None specified yet.

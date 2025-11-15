@@ -14,9 +14,11 @@
                 <div class="nav-menu">
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('admin_labor_verification') }}">Labor Verification</a>
                         {% else %}
                             <a href="{{ url_for('parent_dashboard') }}">My Forms</a>
+                            <a href="{{ url_for('parent_labor_hours') }}">Labor Hours</a>
                             <form method="POST" action="{{ url_for('make_admin') }}" style="display: inline;">
                                 <button type="submit" class="btn-link">Become Admin</button>
                             </form>

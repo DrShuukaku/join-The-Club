@@ -3,6 +3,7 @@ from app import db
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint
+import secrets
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -17,6 +18,7 @@ class User(UserMixin, db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     submissions = db.relationship('Submission', back_populates='user', cascade='all, delete-orphan')
+    labor_hours = db.relationship('LaborHours', back_populates='user', cascade='all, delete-orphan')
 
 class OAuth(OAuthConsumerMixin, db.Model):
     user_id = db.Column(db.String, db.ForeignKey(User.id))
@@ -55,3 +57,33 @@ class Submission(db.Model):
     
     form = db.relationship('Form', back_populates='submissions')
     user = db.relationship('User', back_populates='submissions')
+
+class LaborHours(db.Model):
+    __tablename__ = 'labor_hours'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    task_description = db.Column(db.String(500), nullable=False)
+    verification_code = db.Column(db.String(20), unique=True, nullable=False)
+    
+    check_in_time = db.Column(db.DateTime, nullable=False)
+    check_out_time = db.Column(db.DateTime, nullable=True)
+    admin_verified_at = db.Column(db.DateTime, nullable=True)
+    verified_by_admin_id = db.Column(db.String, nullable=True)
+    
+    status = db.Column(db.String(20), default='checked_in')
+    hours_worked = db.Column(db.Float, nullable=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    user = db.relationship('User', back_populates='labor_hours')
+    
+    @staticmethod
+    def generate_verification_code():
+        return secrets.token_hex(8).upper()
+    
+    def calculate_hours(self):
+        if self.check_in_time and self.check_out_time:
+            delta = self.check_out_time - self.check_in_time
+            return round(delta.total_seconds() / 3600, 2)
+        return 0
