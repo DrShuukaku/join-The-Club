@@ -253,6 +253,23 @@ body {
     opacity: 0.8;
 }
 
+.btn-admin {
+    background: #6b7280;
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-admin:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
 .dashboard h1 {
     margin-bottom: 2rem;
     color: #2c3e50;

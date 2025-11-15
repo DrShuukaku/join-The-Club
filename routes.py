@@ -221,6 +221,11 @@ def parent_labor_hours():
 @require_login
 def labor_check_in():
     task_description = request.form.get('task_description')
+    custom_task = request.form.get('custom_task')
+    
+    if task_description == 'Custom' and custom_task:
+        task_description = custom_task
+    
     if not task_description:
         flash('Please provide a task description.', 'danger')
         return redirect(url_for('parent_labor_hours'))
@@ -373,3 +378,103 @@ def make_admin():
         flash('You are not authorized to become an admin.', 'danger')
     
     return redirect(url_for('index'))
+
+@app.route('/parent/service-log/print')
+@require_login
+def print_service_log():
+    labor_records = LaborHours.query.filter_by(user_id=current_user.id).order_by(LaborHours.check_in_time.desc()).all()
+    total_hours = sum([record.hours_worked for record in labor_records if record.hours_worked and record.status == 'verified'])
+    return render_template('print_service_log.html', labor_records=labor_records, total_hours=total_hours)
+
+@app.route('/parent/service-log/csv')
+@require_login
+def export_service_log_csv():
+    import csv
+    from io import StringIO
+    
+    labor_records = LaborHours.query.filter_by(user_id=current_user.id).order_by(LaborHours.check_in_time.desc()).all()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Date', 'Task', 'Check In', 'Check Out', 'Hours', 'Status', 'Admin Notes'])
+    
+    for record in labor_records:
+        writer.writerow([
+            record.check_in_time.strftime('%Y-%m-%d'),
+            record.task_description,
+            record.check_in_time.strftime('%I:%M %p'),
+            record.check_out_time.strftime('%I:%M %p') if record.check_out_time else 'N/A',
+            f"{record.hours_worked:.2f}" if record.hours_worked else '0.00',
+            record.status.replace('_', ' ').title(),
+            record.admin_notes or ''
+        ])
+    
+    output.seek(0)
+    return send_file(
+        BytesIO(output.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'service_hours_{current_user.first_name}_{datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
+@app.route('/parent/service-log/monthly')
+@require_login
+def monthly_summary_report():
+    from collections import defaultdict
+    
+    labor_records = LaborHours.query.filter_by(user_id=current_user.id).filter(
+        LaborHours.status == 'verified'
+    ).order_by(LaborHours.check_in_time.desc()).all()
+    
+    monthly_data = defaultdict(lambda: {'hours': 0, 'sessions': 0, 'tasks': []})
+    
+    for record in labor_records:
+        if record.hours_worked:
+            month_key = record.check_in_time.strftime('%Y-%m')
+            month_name = record.check_in_time.strftime('%B %Y')
+            monthly_data[month_key]['month_name'] = month_name
+            monthly_data[month_key]['hours'] += record.hours_worked
+            monthly_data[month_key]['sessions'] += 1
+            monthly_data[month_key]['tasks'].append({
+                'date': record.check_in_time.strftime('%b %d, %Y'),
+                'task': record.task_description,
+                'hours': record.hours_worked
+            })
+    
+    sorted_months = sorted(monthly_data.items(), reverse=True)
+    
+    return render_template('monthly_summary.html', monthly_data=sorted_months)
+
+@app.route('/admin/service-hours-dashboard')
+@require_login
+def admin_service_hours_dashboard():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    all_labor_records = LaborHours.query.join(User).order_by(LaborHours.check_in_time.desc()).all()
+    
+    parent_summaries = {}
+    for record in all_labor_records:
+        user_id = record.user_id
+        if user_id not in parent_summaries:
+            parent_summaries[user_id] = {
+                'name': f"{record.user.first_name} {record.user.last_name or ''}".strip() or record.user.email,
+                'email': record.user.email,
+                'total_hours': 0,
+                'verified_hours': 0,
+                'pending_hours': 0,
+                'sessions': 0
+            }
+        
+        parent_summaries[user_id]['sessions'] += 1
+        if record.hours_worked:
+            parent_summaries[user_id]['total_hours'] += record.hours_worked
+            if record.status == 'verified':
+                parent_summaries[user_id]['verified_hours'] += record.hours_worked
+            elif record.status == 'pending_verification':
+                parent_summaries[user_id]['pending_hours'] += record.hours_worked
+    
+    return render_template('admin_service_dashboard.html', 
+                         parent_summaries=parent_summaries.values(),
+                         all_labor_records=all_labor_records)

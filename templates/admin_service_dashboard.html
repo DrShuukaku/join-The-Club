@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Service Hours Dashboard - Admin{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <h1>All Parents Service Hours Dashboard</h1>
+    
+    <div class="action-buttons" style="margin-bottom: 2rem;">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Admin Dashboard</a>
+        <a href="{{ url_for('admin_labor_verification') }}" class="btn-secondary">Labor Verification</a>
+    </div>
+    
+    <section class="dashboard-section">
+        <h2>Parent Summary</h2>
+        <div class="submissions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parent Name</th>
+                        <th>Email</th>
+                        <th>Total Sessions</th>
+                        <th>Verified Hours</th>
+                        <th>Pending Hours</th>
+                        <th>Total Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parent in parent_summaries|sort(attribute='verified_hours', reverse=True) %}
+                    <tr>
+                        <td><strong>{{ parent.name }}</strong></td>
+                        <td>{{ parent.email }}</td>
+                        <td>{{ parent.sessions }}</td>
+                        <td style="color: #059669; font-weight: 600;">{{ parent.verified_hours|round(2) }}</td>
+                        <td style="color: #d97706;">{{ parent.pending_hours|round(2) }}</td>
+                        <td><strong>{{ parent.total_hours|round(2) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #1a1a1a; color: white; font-weight: bold;">
+                        <td colspan="3">School Totals</td>
+                        <td>{{ parent_summaries|sum(attribute='verified_hours')|round(2) }}</td>
+                        <td>{{ parent_summaries|sum(attribute='pending_hours')|round(2) }}</td>
+                        <td>{{ parent_summaries|sum(attribute='total_hours')|round(2) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+    
+    <section class="dashboard-section">
+        <h2>Recent Activity - All Parents</h2>
+        <div class="submissions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parent</th>
+                        <th>Date</th>
+                        <th>Task</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in all_labor_records[:50] %}
+                    <tr>
+                        <td>{{ record.user.first_name }} {{ record.user.last_name or '' }}</td>
+                        <td>{{ record.check_in_time.strftime('%b %d, %Y') }}</td>
+                        <td>{{ record.task_description }}</td>
+                        <td>{{ record.hours_worked|round(2) if record.hours_worked else 'In progress' }}</td>
+                        <td>
+                            {% if record.status == 'checked_in' %}
+                                <span class="badge badge-active">Active</span>
+                            {% elif record.status == 'pending_verification' %}
+                                <span class="badge" style="background: #fff3cd; color: #856404;">Pending</span>
+                            {% elif record.status == 'verified' %}
+                                <span class="badge badge-active">Verified</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Rejected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

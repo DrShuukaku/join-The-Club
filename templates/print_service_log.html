@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Hours Log - {{ current_user.first_name }} {{ current_user.last_name }}</title>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: #1a1a1a;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        th {
+            background: #1a1a1a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .status-verified {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            color: #d97706;
+            font-weight: 600;
+        }
+        
+        .status-rejected {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .total-section {
+            background: #1a1a1a;
+            color: white;
+            padding: 15px;
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .print-btn {
+            background: #6b7280;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .print-btn:hover {
+            background: #4b5563;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-btn no-print">🖨️ Print This Report</button>
+    
+    <div class="header">
+        <h1>Volunteer Service Hours Log</h1>
+        <div class="subtitle">Saint Philip Neri Catholic School</div>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-row">
+            <span class="info-label">Volunteer Name:</span>
+            <span>{{ current_user.first_name }} {{ current_user.last_name or '' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span>{{ current_user.email }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Report Generated:</span>
+            <span>{{ now().strftime('%B %d, %Y at %I:%M %p') }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Total Verified Hours:</span>
+            <span>{{ total_hours|round(2) }} hours</span>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Task Description</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Hours</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in labor_records %}
+            <tr>
+                <td>{{ record.check_in_time.strftime('%b %d, %Y') }}</td>
+                <td>{{ record.task_description }}</td>
+                <td>{{ record.check_in_time.strftime('%I:%M %p') }}</td>
+                <td>{{ record.check_out_time.strftime('%I:%M %p') if record.check_out_time else 'N/A' }}</td>
+                <td>{{ record.hours_worked|round(2) if record.hours_worked else '0.00' }}</td>
+                <td class="status-{{ record.status.replace('_', '-') }}">
+                    {{ record.status.replace('_', ' ').title() }}
+                </td>
+            </tr>
+            {% if record.admin_notes %}
+            <tr>
+                <td colspan="6" style="background: #fffbeb; font-style: italic; padding-left: 30px;">
+                    <small><strong>Note:</strong> {{ record.admin_notes }}</small>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="total-section">
+        Total Verified Hours: {{ total_hours|round(2) }}
+    </div>
+    
+    <div class="footer">
+        <p>This is an official record of volunteer service hours for Saint Philip Neri Catholic School</p>
+        <p>Verified hours have been approved by school administration</p>
+    </div>
+</body>
+</html>

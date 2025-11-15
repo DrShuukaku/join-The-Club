@@ -20,6 +20,7 @@
                         {% if current_user.is_admin %}
                             <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                             <a href="{{ url_for('admin_labor_verification') }}">Labor Verification</a>
+                            <a href="{{ url_for('admin_service_hours_dashboard') }}">Service Hours</a>
                         {% else %}
                             <a href="{{ url_for('parent_dashboard') }}">My Forms</a>
                             <a href="{{ url_for('parent_labor_hours') }}">Labor Hours</a>
@@ -30,7 +31,7 @@
                         <span class="user-info">{{ current_user.first_name or current_user.email }}</span>
                         <a href="{{ url_for('replit_auth.logout') }}" class="btn-logout">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('replit_auth.login') }}" class="btn-primary">Login</a>
+                        <a href="{{ url_for('replit_auth.login') }}" class="btn-admin">Admin</a>
                     {% endif %}
                 </div>
                 <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Saint Philip Neri Logo" class="school-logo">

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Service Hours Summary{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <h1>Monthly Service Hours Summary</h1>
+    
+    <div class="action-buttons" style="margin-bottom: 2rem;">
+        <a href="{{ url_for('parent_labor_hours') }}" class="btn-secondary">← Back to Labor Hours</a>
+        <a href="{{ url_for('print_service_log') }}" class="btn-secondary" target="_blank">📄 Print Full Log</a>
+    </div>
+    
+    {% if monthly_data %}
+        {% for month_key, data in monthly_data %}
+        <section class="dashboard-section">
+            <h2>{{ data.month_name }}</h2>
+            
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card">
+                    <div class="stat-value">{{ data.hours|round(2) }}</div>
+                    <div class="stat-label">Total Hours</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ data.sessions }}</div>
+                    <div class="stat-label">Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ (data.hours / data.sessions)|round(2) if data.sessions > 0 else 0 }}</div>
+                    <div class="stat-label">Avg Hours/Session</div>
+                </div>
+            </div>
+            
+            <div class="submissions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Task</th>
+                            <th>Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in data.tasks %}
+                        <tr>
+                            <td>{{ task.date }}</td>
+                            <td>{{ task.task }}</td>
+                            <td>{{ task.hours|round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f5f5f5; font-weight: bold;">
+                            <td colspan="2">Month Total</td>
+                            <td>{{ data.hours|round(2) }} hours</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+        {% endfor %}
+        
+        <section class="dashboard-section" style="background: #1a1a1a; color: white;">
+            <h2 style="color: white; border-color: #dc2626;">Grand Total - All Months</h2>
+            <div style="font-size: 2rem; text-align: center; padding: 2rem;">
+                {{ monthly_data|sum(attribute='1.hours')|round(2) }} Hours
+            </div>
+        </section>
+    {% else %}
+        <section class="dashboard-section">
+            <p class="empty-state">No verified service hours found. Complete and verify your volunteer sessions to see monthly summaries.</p>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
