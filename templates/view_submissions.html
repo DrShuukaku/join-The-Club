@@ -16,7 +16,18 @@
     </div>
 
     <section class="dashboard-section">
-        <h2>Submissions</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Submissions</h2>
+            <div class="filter-group">
+                <label for="classroom-filter" style="margin-right: 0.5rem; font-weight: 600;">Filter by Classroom:</label>
+                <select id="classroom-filter" class="form-control" style="display: inline-block; width: auto; min-width: 200px;" onchange="window.location.href='?classroom=' + this.value">
+                    <option value="">All Classrooms</option>
+                    {% for classroom in classrooms %}
+                        <option value="{{ classroom }}" {% if classroom == selected_classroom %}selected{% endif %}>{{ classroom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
         {% if submissions %}
             <div class="submissions-table">
                 <table>
@@ -24,6 +35,7 @@
                         <tr>
                             <th>Parent Name</th>
                             <th>Email</th>
+                            <th>Classroom</th>
                             <th>Submitted Date</th>
                             <th>Additional Info</th>
                             <th>File</th>
@@ -34,6 +46,7 @@
                         <tr>
                             <td>{{ submission.user.first_name }} {{ submission.user.last_name or '' }}</td>
                             <td>{{ submission.user.email }}</td>
+                            <td>{{ submission.user.classroom or 'Not set' }}</td>
                             <td>{{ submission.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</td>
                             <td>{{ submission.content or 'N/A' }}</td>
                             <td>

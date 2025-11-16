@@ -126,14 +126,21 @@ def admin_dashboard():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('parent_dashboard'))
     
+    selected_classroom = request.args.get('classroom', '')
+    
     forms = Form.query.order_by(Form.deadline.desc()).all()
     total_users = User.query.count()
     total_submissions = Submission.query.count()
     
+    all_classrooms = db.session.query(User.classroom).filter(User.classroom.isnot(None)).distinct().order_by(User.classroom).all()
+    classrooms = [c[0] for c in all_classrooms if c[0]]
+    
     return render_template('admin_dashboard.html', 
                          forms=forms,
                          total_users=total_users,
-                         total_submissions=total_submissions)
+                         total_submissions=total_submissions,
+                         classrooms=classrooms,
+                         selected_classroom=selected_classroom)
 
 @app.route('/admin/form/create', methods=['GET', 'POST'])
 @require_login
@@ -169,10 +176,23 @@ def view_submissions(form_id):
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('parent_dashboard'))
     
-    form = Form.query.get_or_404(form_id)
-    submissions = Submission.query.filter_by(form_id=form_id).all()
+    selected_classroom = request.args.get('classroom', '')
     
-    return render_template('view_submissions.html', form=form, submissions=submissions)
+    form = Form.query.get_or_404(form_id)
+    
+    query = Submission.query.filter_by(form_id=form_id).join(User)
+    if selected_classroom:
+        query = query.filter(User.classroom == selected_classroom)
+    submissions = query.all()
+    
+    all_classrooms = db.session.query(User.classroom).filter(User.classroom.isnot(None)).distinct().order_by(User.classroom).all()
+    classrooms = [c[0] for c in all_classrooms if c[0]]
+    
+    return render_template('view_submissions.html', 
+                         form=form, 
+                         submissions=submissions,
+                         classrooms=classrooms,
+                         selected_classroom=selected_classroom)
 
 @app.route('/admin/form/<int:form_id>/toggle')
 @require_login
@@ -469,7 +489,12 @@ def admin_service_hours_dashboard():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('parent_dashboard'))
     
-    all_labor_records = LaborHours.query.join(User).order_by(LaborHours.check_in_time.desc()).all()
+    selected_classroom = request.args.get('classroom', '')
+    
+    query = LaborHours.query.join(User)
+    if selected_classroom:
+        query = query.filter(User.classroom == selected_classroom)
+    all_labor_records = query.order_by(LaborHours.check_in_time.desc()).all()
     
     parent_summaries = {}
     for record in all_labor_records:
@@ -478,6 +503,7 @@ def admin_service_hours_dashboard():
             parent_summaries[user_id] = {
                 'name': f"{record.user.first_name} {record.user.last_name or ''}".strip() or record.user.email,
                 'email': record.user.email,
+                'classroom': record.user.classroom or 'Not set',
                 'total_hours': 0,
                 'verified_hours': 0,
                 'pending_hours': 0,
@@ -492,6 +518,11 @@ def admin_service_hours_dashboard():
             elif record.status == 'pending_verification':
                 parent_summaries[user_id]['pending_hours'] += record.hours_worked
     
+    all_classrooms = db.session.query(User.classroom).filter(User.classroom.isnot(None)).distinct().order_by(User.classroom).all()
+    classrooms = [c[0] for c in all_classrooms if c[0]]
+    
     return render_template('admin_service_dashboard.html', 
                          parent_summaries=parent_summaries.values(),
-                         all_labor_records=all_labor_records)
+                         all_labor_records=all_labor_records,
+                         classrooms=classrooms,
+                         selected_classroom=selected_classroom)
