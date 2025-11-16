@@ -11,7 +11,7 @@
         <div class="container">
             <div class="nav-left">
                 {% if not current_user.is_authenticated %}
-                    <a href="{{ url_for('replit_auth.login') }}" class="btn-parents-login">Parent's Login</a>
+                    <a href="/auth/replit_auth" class="btn-parents-login">Parent's Login</a>
                 {% endif %}
             </div>
             <div class="nav-right">
@@ -32,7 +32,7 @@
                         <span class="user-info">{{ current_user.first_name or current_user.email }}</span>
                         <a href="{{ url_for('replit_auth.logout') }}" class="btn-logout">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('replit_auth.login') }}" class="btn-admin">Admin</a>
+                        <a href="/auth/replit_auth" class="btn-admin">Admin</a>
                     {% endif %}
                 </div>
                 <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Saint Philip Neri Logo" class="school-logo">

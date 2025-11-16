@@ -449,7 +449,7 @@ def test_login_page():
     <body>
         <h1>🔐 Login Test</h1>
         <p>Click the button below to test Replit Auth login:</p>
-        <a href="/auth/replit_auth/login" class="btn">Test Login</a>
+        <a href="/auth/replit_auth" class="btn">Test Login</a>
         
         <div class="status">
             <h3>Current Status:</h3>
