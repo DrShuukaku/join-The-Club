@@ -13,6 +13,8 @@ A web application designed for schools to manage paperwork submissions from pare
 - Track submission statistics
 - Verify parent volunteer labor hours via QR code or manual entry
 - Track and approve volunteer work sessions
+- **Filter all dashboards by classroom** to view only their classroom's parents
+- View classroom assignments for all parents
 
 ### For Parents
 - View all assigned paperwork forms
@@ -23,6 +25,7 @@ A web application designed for schools to manage paperwork submissions from pare
 - Log volunteer labor hours with check-in/check-out system
 - Generate QR codes for admin verification
 - View labor hours history and total hours contributed
+- **Set their child's classroom** in their profile (Kindergarten-8th Grade)
 
 ## Technology Stack
 - **Backend**: Flask (Python)
@@ -100,6 +103,12 @@ A web application designed for schools to manage paperwork submissions from pare
 - `ADMIN_EMAILS`: **Required** - Comma-separated list of admin email addresses (must be set by user)
 
 ## Recent Changes
+- November 16, 2025:
+  - **Added classroom-based filtering system**: Teachers/admins can now filter all dashboards by classroom
+  - Parents can set their classroom in their profile (Kindergarten through 8th Grade)
+  - Classroom filtering available on: Admin Dashboard, Form Submissions, Service Hours Dashboard
+  - All admin views now display parent classroom information
+  - Added "Profile" link to parent navigation for classroom management
 - November 15, 2025: 
   - Added volunteer labor hours tracking system with QR code verification
   - Implemented service log enhancements: pre-filled task categories, printable reports, CSV export, monthly summaries
