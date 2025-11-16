@@ -416,6 +416,65 @@ def make_admin():
     
     return redirect(url_for('index'))
 
+@app.route('/debug/auth-status')
+def debug_auth_status():
+    """Debugging route to check authentication status"""
+    admin_emails_list = [email.strip().lower() for email in os.environ.get('ADMIN_EMAILS', '').split(',') if email.strip()]
+    status = {
+        'authenticated': current_user.is_authenticated if current_user else False,
+        'is_admin': current_user.is_admin if current_user.is_authenticated else False,
+        'email': current_user.email if current_user.is_authenticated else None,
+        'admin_emails_configured': len(admin_emails_list) > 0,
+        'admin_emails_count': len(admin_emails_list),
+        'repl_id_configured': os.environ.get('REPL_ID', '') != '',
+        'issuer_url': os.environ.get('ISSUER_URL', 'https://replit.com/oidc (default)'),
+    }
+    return jsonify(status)
+
+@app.route('/test-login')
+def test_login_page():
+    """Test page to try login"""
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Login Test - Saint Philip Neri</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+            .btn { display: inline-block; padding: 15px 30px; background: #dc2626; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+            .status { background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            h1 { color: #1f2937; }
+        </style>
+    </head>
+    <body>
+        <h1>🔐 Login Test</h1>
+        <p>Click the button below to test Replit Auth login:</p>
+        <a href="/auth/replit_auth/login" class="btn">Test Login</a>
+        
+        <div class="status">
+            <h3>Current Status:</h3>
+            <p id="status">Loading...</p>
+        </div>
+        
+        <p><a href="/">← Back to Home</a></p>
+        
+        <script>
+            fetch('/debug/auth-status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('status').innerHTML = `
+                        <strong>Authenticated:</strong> ${data.authenticated}<br>
+                        <strong>Is Admin:</strong> ${data.is_admin}<br>
+                        <strong>Email:</strong> ${data.email || 'Not logged in'}<br>
+                        <strong>Admin Emails Configured:</strong> ${data.admin_emails_configured} (${data.admin_emails_count} emails)<br>
+                        <strong>REPL_ID Set:</strong> ${data.repl_id_configured}
+                    `;
+                });
+        </script>
+    </body>
+    </html>
+    '''
+
 @app.route('/parent/service-log/print')
 @require_login
 def print_service_log():
