@@ -102,6 +102,23 @@ def submit_form(form_id):
     existing_submission = Submission.query.filter_by(form_id=form_id, user_id=current_user.id).first()
     return render_template('submit_form.html', form=form, submission=existing_submission)
 
+@app.route('/parent/profile')
+@require_login
+def parent_profile():
+    return render_template('parent_profile.html')
+
+@app.route('/parent/profile/update', methods=['POST'])
+@require_login
+def update_profile():
+    classroom = request.form.get('classroom')
+    if classroom:
+        current_user.classroom = classroom
+        db.session.commit()
+        flash(f'Your classroom has been updated to {classroom}', 'success')
+    else:
+        flash('Please select a classroom', 'danger')
+    return redirect(url_for('parent_profile'))
+
 @app.route('/admin/dashboard')
 @require_login
 def admin_dashboard():
