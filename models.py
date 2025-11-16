@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String, nullable=True)
     profile_image_url = db.Column(db.String, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
+    classroom = db.Column(db.String(100), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
