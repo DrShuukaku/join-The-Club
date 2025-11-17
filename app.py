@@ -4,8 +4,13 @@ from sqlalchemy.orm import DeclarativeBase
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
+import sys
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 
 class Base(DeclarativeBase):
     pass
@@ -50,3 +55,15 @@ def init_db():
 def ensure_db_initialized():
     """Ensure database is initialized before handling any request."""
     init_db()
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Log internal server errors with full details."""
+    logging.error(f"Internal Server Error: {error}", exc_info=True)
+    return f"<h1>Internal Server Error</h1><p>Error details: {str(error)}</p><pre>{error.__class__.__name__}</pre>", 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Log all unhandled exceptions."""
+    logging.error(f"Unhandled exception: {e}", exc_info=True)
+    return f"<h1>Error</h1><p>{str(e)}</p>", 500
