@@ -66,12 +66,6 @@ def make_replit_blueprint():
         raise SystemExit("the REPL_ID environment variable must be set")
 
     issuer_url = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
-    
-    replit_dev_domain = os.environ.get('REPLIT_DEV_DOMAIN', '')
-    if replit_dev_domain:
-        redirect_uri = f"https://{replit_dev_domain}/auth/replit_auth/authorized"
-    else:
-        redirect_uri = None
 
     replit_bp = OAuth2ConsumerBlueprint(
         "replit_auth",
@@ -79,7 +73,7 @@ def make_replit_blueprint():
         client_id=repl_id,
         client_secret=None,
         base_url=issuer_url,
-        redirect_uri=redirect_uri,
+        redirect_uri=None,
         authorization_url_params={
             "prompt": "login consent",
         },
