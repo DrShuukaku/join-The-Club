@@ -6,7 +6,7 @@ import qrcode
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
 from flask_login import current_user
-from models import User, Form, Submission, LaborHours
+from models import User, Form, Submission, LaborHours, Job
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 ALLOWED_MIMETYPES = {
