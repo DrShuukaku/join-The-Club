@@ -20,10 +20,12 @@
                         {% if current_user.is_admin %}
                             <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                             <a href="{{ url_for('admin_jobs') }}">Jobs</a>
+                            <a href="{{ url_for('admin_parent_verification') }}">Verify Parents</a>
                             <a href="{{ url_for('admin_labor_verification') }}">Labor Verification</a>
                             <a href="{{ url_for('admin_service_hours_dashboard') }}">Service Hours</a>
                         {% else %}
                             <a href="{{ url_for('parent_dashboard') }}">My Forms</a>
+                            <a href="{{ url_for('parent_view_jobs') }}">Jobs</a>
                             <a href="{{ url_for('parent_labor_hours') }}">Labor Hours</a>
                             <a href="{{ url_for('parent_profile') }}">Profile</a>
                             <form method="POST" action="{{ url_for('make_admin') }}" style="display: inline;">

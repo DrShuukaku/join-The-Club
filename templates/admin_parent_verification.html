@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Job Verification - Admin{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <div class="admin-header">
+        <h1>Manage Parent Job Eligibility</h1>
+        <a href="{{ url_for('admin_jobs') }}" class="btn-primary">Back to Jobs</a>
+    </div>
+
+    <section class="dashboard-section">
+        <div class="verification-table-container">
+            <table class="verification-table">
+                <thead>
+                    <tr>
+                        <th>Parent Name</th>
+                        <th>Email</th>
+                        {% for value, label in categories %}
+                            <th>{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parent_id, data in verified_data.items() %}
+                    <tr>
+                        <td>
+                            {{ data.parent.first_name or 'N/A' }}
+                            {% if data.parent.last_name %}{{ data.parent.last_name }}{% endif %}
+                        </td>
+                        <td>{{ data.parent.email }}</td>
+                        {% for category_value, category_label in categories %}
+                        <td class="verification-cell">
+                            {% if category_value in data.verified_for %}
+                                <span class="badge badge-verified">✓ Verified</span>
+                                <form method="POST" action="{{ url_for('revoke_parent_category', parent_id=parent_id, category=category_value) }}" style="display: inline;">
+                                    <button type="submit" class="btn-small btn-revoke">Revoke</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('verify_parent_category', parent_id=parent_id, category=category_value) }}" style="display: inline;">
+                                    <button type="submit" class="btn-small btn-verify">Verify</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<style>
+.verification-table-container {
+    overflow-x: auto;
+}
+
+.verification-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.verification-table thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #c41e3a;
+}
+
+.verification-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+}
+
+.verification-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.verification-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-verified {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.btn-verify, .btn-revoke {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-verify {
+    background-color: #c41e3a;
+    color: white;
+}
+
+.btn-verify:hover {
+    background-color: #a01729;
+}
+
+.btn-revoke {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-revoke:hover {
+    background-color: #c82333;
+}
+</style>
+{% endblock %}

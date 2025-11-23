@@ -94,6 +94,19 @@ class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    category = db.Column(db.String(100), nullable=False, default='general')
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class JobEligibility(db.Model):
+    __tablename__ = 'job_eligibility'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    verified_at = db.Column(db.DateTime, default=datetime.now)
+    verified_by_admin_id = db.Column(db.String, nullable=True)
+    
+    __table_args__ = (UniqueConstraint('user_id', 'category', name='uq_user_category'),)
+    
+    user = db.relationship('User')

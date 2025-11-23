@@ -6,7 +6,7 @@ import qrcode
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
 from flask_login import current_user
-from models import User, Form, Submission, LaborHours, Job
+from models import User, Form, Submission, LaborHours, Job, JobEligibility
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 ALLOWED_MIMETYPES = {
@@ -607,6 +607,7 @@ def post_job():
         job_type = request.form.get('job_type')
         custom_job = request.form.get('custom_job')
         description = request.form.get('description')
+        category = request.form.get('category', 'general')
         
         job_title = custom_job if job_type == 'custom' and custom_job else job_type
         
@@ -614,7 +615,7 @@ def post_job():
             flash('Please select or enter a job title.', 'danger')
             return redirect(url_for('post_job'))
         
-        job = Job(title=job_title, description=description)
+        job = Job(title=job_title, description=description, category=category)
         db.session.add(job)
         db.session.commit()
         flash(f'Job "{job_title}" posted successfully!', 'success')
@@ -626,7 +627,11 @@ def post_job():
         'Classroom Teacher\'s Aid',
         'Classroom Parent Visitor'
     ]
-    return render_template('post_job.html', predefined_jobs=predefined_jobs)
+    job_categories = [
+        ('general', 'General - No special requirements'),
+        ('child_interaction', 'Works with Children - Requires verification')
+    ]
+    return render_template('post_job.html', predefined_jobs=predefined_jobs, job_categories=job_categories)
 
 @app.route('/admin/jobs/<int:job_id>/deactivate', methods=['POST'])
 @require_login
@@ -640,3 +645,69 @@ def deactivate_job(job_id):
     db.session.commit()
     flash(f'Job "{job.title}" has been deactivated.', 'success')
     return redirect(url_for('admin_jobs'))
+
+@app.route('/admin/parent-verification')
+@require_login
+def admin_parent_verification():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    all_parents = User.query.filter_by(is_admin=False).order_by(User.first_name).all()
+    verified_data = {}
+    
+    for parent in all_parents:
+        verified_data[parent.id] = {
+            'parent': parent,
+            'verified_for': [e.category for e in JobEligibility.query.filter_by(user_id=parent.id).all()]
+        }
+    
+    categories = [
+        ('general', 'General Jobs'),
+        ('child_interaction', 'Works with Children')
+    ]
+    
+    return render_template('admin_parent_verification.html', verified_data=verified_data, categories=categories)
+
+@app.route('/admin/parent/<parent_id>/verify/<category>', methods=['POST'])
+@require_login
+def verify_parent_category(parent_id, category):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    parent = User.query.get_or_404(parent_id)
+    
+    existing = JobEligibility.query.filter_by(user_id=parent_id, category=category).first()
+    if existing:
+        return jsonify({'error': 'Already verified'}), 400
+    
+    eligibility = JobEligibility(user_id=parent_id, category=category, verified_by_admin_id=current_user.id)
+    db.session.add(eligibility)
+    db.session.commit()
+    
+    flash(f'{parent.first_name or parent.email} verified for {category} jobs.', 'success')
+    return redirect(url_for('admin_parent_verification'))
+
+@app.route('/admin/parent/<parent_id>/revoke/<category>', methods=['POST'])
+@require_login
+def revoke_parent_category(parent_id, category):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    eligibility = JobEligibility.query.filter_by(user_id=parent_id, category=category).first()
+    if eligibility:
+        db.session.delete(eligibility)
+        db.session.commit()
+        flash(f'Verification revoked.', 'success')
+    
+    return redirect(url_for('admin_parent_verification'))
+
+@app.route('/parent/jobs')
+@require_login
+def parent_view_jobs():
+    user_eligibilities = JobEligibility.query.filter_by(user_id=current_user.id).all()
+    user_categories = [e.category for e in user_eligibilities] + ['general']
+    
+    available_jobs = Job.query.filter_by(is_active=True).filter(Job.category.in_(user_categories)).all()
+    
+    return render_template('parent_jobs.html', jobs=available_jobs)

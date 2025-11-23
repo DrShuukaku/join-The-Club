@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Available Jobs - Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <div class="admin-header">
+        <h1>Available Volunteer Jobs</h1>
+        <a href="{{ url_for('parent_dashboard') }}" class="btn-secondary">Back to My Forms</a>
+    </div>
+
+    <section class="dashboard-section">
+        {% if jobs %}
+            <div class="jobs-list">
+                {% for job in jobs %}
+                <div class="job-item">
+                    <div class="job-header">
+                        <h3>{{ job.title }}</h3>
+                        <span class="job-category">
+                            {% if job.category == 'child_interaction' %}
+                                <span class="badge badge-special">Works with Children</span>
+                            {% else %}
+                                <span class="badge badge-general">General</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if job.description %}
+                    <div class="job-body">
+                        {{ job.description }}
+                    </div>
+                    {% endif %}
+                    <div class="job-footer">
+                        <small class="job-posted">Posted {{ job.created_at.strftime('%b %d, %Y') }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No jobs are currently available to you. Check back soon!</p>
+                <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+                    Some jobs may require admin verification. Contact your school administrator if you'd like to be verified for additional job categories.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+.jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.job-item {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 4px solid #c41e3a;
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.job-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.job-category {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.badge-general {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.badge-special {
+    background: #ffc107;
+    color: #333;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.job-body {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.job-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 1rem;
+}
+
+.job-posted {
+    color: #999;
+}
+
+.btn-secondary {
+    background-color: #808080;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #666;
+}
+</style>
+{% endblock %}
