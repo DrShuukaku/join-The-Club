@@ -110,3 +110,19 @@ class JobEligibility(db.Model):
     __table_args__ = (UniqueConstraint('user_id', 'category', name='uq_user_category'),)
     
     user = db.relationship('User')
+
+class JobApplication(db.Model):
+    __tablename__ = 'job_applications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    file_data = db.Column(db.LargeBinary, nullable=True)
+    file_name = db.Column(db.String(255), nullable=True)
+    file_type = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(20), default='pending')
+    admin_notes = db.Column(db.Text, nullable=True)
+    submitted_at = db.Column(db.DateTime, default=datetime.now)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by_admin_id = db.Column(db.String, nullable=True)
+    
+    user = db.relationship('User')

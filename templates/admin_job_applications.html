@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Job Applications - Admin Review{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <div class="admin-header">
+        <h1>Job Application Review</h1>
+        <a href="{{ url_for('admin_jobs') }}" class="btn-primary">Back to Jobs</a>
+    </div>
+
+    <section class="dashboard-section">
+        <h2>Pending Applications ({{ pending_apps|length }})</h2>
+        {% if pending_apps %}
+            <div class="applications-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parent Name</th>
+                            <th>Email</th>
+                            <th>Category</th>
+                            <th>Submitted</th>
+                            <th>Document</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in pending_apps %}
+                        <tr>
+                            <td>{{ app.user.first_name or 'N/A' }} {% if app.user.last_name %}{{ app.user.last_name }}{% endif %}</td>
+                            <td>{{ app.user.email }}</td>
+                            <td>
+                                {% if app.category == 'child_interaction' %}
+                                    <span class="badge badge-special">Works with Children</span>
+                                {% else %}
+                                    <span class="badge badge-general">General</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ app.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                            <td>
+                                <a href="{{ url_for('download_application', app_id=app.id) }}" class="btn-small">Download</a>
+                            </td>
+                            <td class="actions">
+                                <form method="POST" action="{{ url_for('approve_application', app_id=app.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn-small btn-approve">Approve</button>
+                                </form>
+                                <button type="button" class="btn-small btn-reject" onclick="showRejectForm({{ app.id }})">Reject</button>
+                            </td>
+                        </tr>
+                        <tr id="reject-form-{{ app.id }}" style="display: none;">
+                            <td colspan="6">
+                                <form method="POST" action="{{ url_for('reject_application', app_id=app.id) }}" class="reject-form">
+                                    <textarea name="notes" placeholder="Reason for rejection (optional)" class="form-control" rows="2"></textarea>
+                                    <div style="margin-top: 0.5rem;">
+                                        <button type="submit" class="btn-small btn-reject">Confirm Rejection</button>
+                                        <button type="button" class="btn-small" onclick="hideRejectForm({{ app.id }})">Cancel</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No pending applications.</p>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-section" style="margin-top: 2rem;">
+        <h2>Reviewed Applications</h2>
+        {% if reviewed_apps %}
+            <div class="applications-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parent Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Reviewed</th>
+                            <th>Notes</th>
+                            <th>Document</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in reviewed_apps %}
+                        <tr>
+                            <td>{{ app.user.first_name or 'N/A' }} {% if app.user.last_name %}{{ app.user.last_name }}{% endif %}</td>
+                            <td>
+                                {% if app.category == 'child_interaction' %}
+                                    <span class="badge badge-special">Works with Children</span>
+                                {% else %}
+                                    <span class="badge badge-general">General</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if app.status == 'approved' %}
+                                    <span class="badge badge-approved">✓ Approved</span>
+                                {% else %}
+                                    <span class="badge badge-rejected">✗ Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ app.reviewed_at.strftime('%b %d, %Y %I:%M %p') if app.reviewed_at else 'N/A' }}</td>
+                            <td>{{ app.admin_notes or '—' }}</td>
+                            <td>
+                                <a href="{{ url_for('download_application', app_id=app.id) }}" class="btn-small">Download</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No reviewed applications.</p>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+function showRejectForm(appId) {
+    document.getElementById('reject-form-' + appId).style.display = 'table-row';
+}
+
+function hideRejectForm(appId) {
+    document.getElementById('reject-form-' + appId).style.display = 'none';
+}
+</script>
+
+<style>
+.applications-table {
+    overflow-x: auto;
+}
+
+.applications-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.applications-table thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #c41e3a;
+}
+
+.applications-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+}
+
+.applications-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.applications-table .actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-approve {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-approve:hover {
+    background-color: #218838;
+}
+
+.btn-reject {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-reject:hover {
+    background-color: #c82333;
+}
+
+.badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: inline-block;
+}
+
+.badge-approved {
+    background: #28a745;
+    color: white;
+}
+
+.badge-rejected {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-special {
+    background: #ffc107;
+    color: #333;
+    font-weight: 600;
+}
+
+.badge-general {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.reject-form {
+    padding: 1rem;
+    background: #fff3cd;
+    border-radius: 4px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+</style>
+{% endblock %}

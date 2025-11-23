@@ -6,7 +6,7 @@ import qrcode
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
 from flask_login import current_user
-from models import User, Form, Submission, LaborHours, Job, JobEligibility
+from models import User, Form, Submission, LaborHours, Job, JobEligibility, JobApplication
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 ALLOWED_MIMETYPES = {
@@ -711,3 +711,116 @@ def parent_view_jobs():
     available_jobs = Job.query.filter_by(is_active=True).filter(Job.category.in_(user_categories)).all()
     
     return render_template('parent_jobs.html', jobs=available_jobs)
+
+@app.route('/parent/apply-for-job/<category>')
+@require_login
+def apply_for_job(category):
+    existing_app = JobApplication.query.filter_by(user_id=current_user.id, category=category).first()
+    existing_eligibility = JobEligibility.query.filter_by(user_id=current_user.id, category=category).first()
+    
+    if existing_eligibility:
+        flash(f'You are already verified for this job category!', 'info')
+        return redirect(url_for('parent_view_jobs'))
+    
+    if request.method == 'POST':
+        file = request.files.get('document')
+        
+        if not file or not file.filename:
+            flash('Please upload a document.', 'danger')
+            return redirect(request.url)
+        
+        if not allowed_file(file.filename, file.content_type):
+            flash('Invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed.', 'danger')
+            return redirect(request.url)
+        
+        if existing_app:
+            existing_app.file_data = file.read()
+            existing_app.file_name = file.filename
+            existing_app.file_type = file.content_type
+            existing_app.submitted_at = datetime.now()
+            existing_app.status = 'pending'
+        else:
+            app_record = JobApplication(
+                user_id=current_user.id,
+                category=category,
+                file_data=file.read(),
+                file_name=file.filename,
+                file_type=file.content_type,
+                status='pending'
+            )
+            db.session.add(app_record)
+        
+        db.session.commit()
+        flash('Your application has been submitted for review!', 'success')
+        return redirect(url_for('parent_view_jobs'))
+    
+    return render_template('apply_for_job.html', category=category, existing_app=existing_app)
+
+@app.route('/admin/job-applications')
+@require_login
+def admin_job_applications():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    pending_apps = JobApplication.query.filter_by(status='pending').order_by(JobApplication.submitted_at.desc()).all()
+    reviewed_apps = JobApplication.query.filter(JobApplication.status.in_(['approved', 'rejected'])).order_by(JobApplication.reviewed_at.desc()).limit(50).all()
+    
+    return render_template('admin_job_applications.html', pending_apps=pending_apps, reviewed_apps=reviewed_apps)
+
+@app.route('/admin/application/<int:app_id>/approve', methods=['POST'])
+@require_login
+def approve_application(app_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    app_record = JobApplication.query.get_or_404(app_id)
+    app_record.status = 'approved'
+    app_record.reviewed_at = datetime.now()
+    app_record.reviewed_by_admin_id = current_user.id
+    
+    eligibility = JobEligibility(user_id=app_record.user_id, category=app_record.category, verified_by_admin_id=current_user.id)
+    db.session.add(eligibility)
+    db.session.commit()
+    
+    flash(f'{app_record.user.first_name or app_record.user.email} approved for {app_record.category} jobs.', 'success')
+    return redirect(url_for('admin_job_applications'))
+
+@app.route('/admin/application/<int:app_id>/reject', methods=['POST'])
+@require_login
+def reject_application(app_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    app_record = JobApplication.query.get_or_404(app_id)
+    notes = request.form.get('notes', '')
+    
+    app_record.status = 'rejected'
+    app_record.reviewed_at = datetime.now()
+    app_record.reviewed_by_admin_id = current_user.id
+    app_record.admin_notes = notes
+    
+    db.session.commit()
+    
+    flash(f'Application rejected.', 'success')
+    return redirect(url_for('admin_job_applications'))
+
+@app.route('/download/application/<int:app_id>')
+@require_login
+def download_application(app_id):
+    app_record = JobApplication.query.get_or_404(app_id)
+    
+    if not current_user.is_admin and app_record.user_id != current_user.id:
+        flash('You do not have permission to access this file.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    if not app_record.file_data:
+        flash('No file attached to this application.', 'warning')
+        return redirect(request.referrer or url_for('parent_dashboard'))
+    
+    return send_file(
+        BytesIO(app_record.file_data),
+        download_name=app_record.file_name,
+        as_attachment=True,
+        mimetype=app_record.file_type
+    )

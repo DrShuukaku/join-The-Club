@@ -31,6 +31,9 @@
                     {% endif %}
                     <div class="job-footer">
                         <small class="job-posted">Posted {{ job.created_at.strftime('%b %d, %Y') }}</small>
+                        {% if job.category != 'general' %}
+                        <a href="{{ url_for('apply_for_job', category=job.category) }}" class="btn-apply">Apply Now</a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -126,6 +129,21 @@
 
 .btn-secondary:hover {
     background-color: #666;
+}
+
+.btn-apply {
+    background-color: #c41e3a;
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    display: inline-block;
+}
+
+.btn-apply:hover {
+    background-color: #a01729;
 }
 </style>
 {% endblock %}
