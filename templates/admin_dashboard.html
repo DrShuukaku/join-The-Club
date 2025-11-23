@@ -6,7 +6,10 @@
 <div class="container dashboard">
     <div class="admin-header">
         <h1>Admin Dashboard</h1>
-        <a href="{{ url_for('create_form') }}" class="btn-primary">Create New Form</a>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('create_form') }}" class="btn-primary">Create New Form</a>
+            <a href="{{ url_for('post_job') }}" class="btn-primary">Post a Job</a>
+        </div>
     </div>
 
     <div class="stats-grid">

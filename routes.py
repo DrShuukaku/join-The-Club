@@ -585,3 +585,58 @@ def admin_service_hours_dashboard():
                          all_labor_records=all_labor_records,
                          classrooms=classrooms,
                          selected_classroom=selected_classroom)
+
+@app.route('/admin/jobs')
+@require_login
+def admin_jobs():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    jobs = Job.query.filter_by(is_active=True).order_by(Job.created_at.desc()).all()
+    return render_template('admin_jobs.html', jobs=jobs)
+
+@app.route('/admin/jobs/post', methods=['GET', 'POST'])
+@require_login
+def post_job():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    if request.method == 'POST':
+        job_type = request.form.get('job_type')
+        custom_job = request.form.get('custom_job')
+        description = request.form.get('description')
+        
+        job_title = custom_job if job_type == 'custom' and custom_job else job_type
+        
+        if not job_title:
+            flash('Please select or enter a job title.', 'danger')
+            return redirect(url_for('post_job'))
+        
+        job = Job(title=job_title, description=description)
+        db.session.add(job)
+        db.session.commit()
+        flash(f'Job "{job_title}" posted successfully!', 'success')
+        return redirect(url_for('admin_jobs'))
+    
+    predefined_jobs = [
+        'Parking Attendant',
+        'School Trip Chaperone',
+        'Classroom Teacher\'s Aid',
+        'Classroom Parent Visitor'
+    ]
+    return render_template('post_job.html', predefined_jobs=predefined_jobs)
+
+@app.route('/admin/jobs/<int:job_id>/deactivate', methods=['POST'])
+@require_login
+def deactivate_job(job_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    job = Job.query.get_or_404(job_id)
+    job.is_active = False
+    db.session.commit()
+    flash(f'Job "{job.title}" has been deactivated.', 'success')
+    return redirect(url_for('admin_jobs'))

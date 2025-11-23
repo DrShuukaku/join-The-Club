@@ -19,6 +19,7 @@
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
                             <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('admin_jobs') }}">Jobs</a>
                             <a href="{{ url_for('admin_labor_verification') }}">Labor Verification</a>
                             <a href="{{ url_for('admin_service_hours_dashboard') }}">Service Hours</a>
                         {% else %}
