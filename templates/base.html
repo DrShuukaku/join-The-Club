@@ -27,6 +27,7 @@
                         {% else %}
                             <a href="{{ url_for('parent_dashboard') }}">My Forms</a>
                             <a href="{{ url_for('parent_view_jobs') }}">Jobs</a>
+                            <a href="{{ url_for('notification_settings') }}">Notifications</a>
                             <a href="{{ url_for('parent_labor_hours') }}">Labor Hours</a>
                             <a href="{{ url_for('parent_profile') }}">Profile</a>
                             <form method="POST" action="{{ url_for('make_admin') }}" style="display: inline;">

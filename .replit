@@ -17,7 +17,7 @@ deploymentTarget = "autoscale"
 
 [agent]
 expertMode = true
-integrations = ["python_log_in_with_replit:1.0.0"]
+integrations = ["python_log_in_with_replit:1.0.0", "replitmail:1.0.0"]
 
 [workflows]
 runButton = "Project"
@@ -46,19 +46,3 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 39571
-externalPort = 3002
-
-[[ports]]
-localPort = 40887
-externalPort = 3003
-
-[[ports]]
-localPort = 41439
-externalPort = 3000
-
-[[ports]]
-localPort = 42797
-externalPort = 3001

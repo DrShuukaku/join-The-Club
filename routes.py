@@ -702,15 +702,10 @@ def revoke_parent_category(parent_id, category):
     
     return redirect(url_for('admin_parent_verification'))
 
-@app.route('/parent/jobs')
+@app.route('/parent/notifications')
 @require_login
-def parent_view_jobs():
-    user_eligibilities = JobEligibility.query.filter_by(user_id=current_user.id).all()
-    user_categories = [e.category for e in user_eligibilities] + ['general']
-    
-    available_jobs = Job.query.filter_by(is_active=True).filter(Job.category.in_(user_categories)).all()
-    
-    return render_template('parent_jobs.html', jobs=available_jobs)
+def notification_settings():
+    return render_template('push_setup.html')
 
 @app.route('/parent/apply-for-job/<category>')
 @require_login
@@ -781,6 +776,16 @@ def approve_application(app_id):
     
     eligibility = JobEligibility(user_id=app_record.user_id, category=app_record.category, verified_by_admin_id=current_user.id)
     db.session.add(eligibility)
+    
+    # Send email notification
+    try:
+        from utils.replitmail import send_email
+        subject = f"Job Application Approved: {app_record.category}"
+        text = f"Hello {app_record.user.first_name or 'there'},\n\nYour application for the '{app_record.category}' job category has been approved! You can now view and apply for these jobs in the dashboard.\n\nBest regards,\nSaint Philip Neri School"
+        send_email(subject=subject, text=text)
+    except Exception as e:
+        print(f"Failed to send approval email: {e}")
+        
     db.session.commit()
     
     flash(f'{app_record.user.first_name or app_record.user.email} approved for {app_record.category} jobs.', 'success')
@@ -800,6 +805,15 @@ def reject_application(app_id):
     app_record.reviewed_by_admin_id = current_user.id
     app_record.admin_notes = notes
     
+    # Send email notification
+    try:
+        from utils.replitmail import send_email
+        subject = f"Job Application Update: {app_record.category}"
+        text = f"Hello {app_record.user.first_name or 'there'},\n\nYour application for the '{app_record.category}' job category has been reviewed. Unfortunately, it was not approved at this time.\n\nAdmin Notes: {notes or 'No notes provided.'}\n\nYou can resubmit your application with the required documentation in the dashboard.\n\nBest regards,\nSaint Philip Neri School"
+        send_email(subject=subject, text=text)
+    except Exception as e:
+        print(f"Failed to send rejection email: {e}")
+        
     db.session.commit()
     
     flash(f'Application rejected.', 'success')

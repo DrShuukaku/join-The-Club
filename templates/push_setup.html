@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Push Notifications Setup{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <div class="admin-header">
+        <h1>Mobile Notifications</h1>
+        <p>Enable push notifications on your phone to get instant alerts about form deadlines and job updates.</p>
+    </div>
+
+    <section class="dashboard-section" style="max-width: 600px;">
+        <div class="notification-card">
+            <div id="push-status" class="alert alert-info">
+                Checking notification status...
+            </div>
+            <button id="enable-push" class="btn-primary" style="display: none;">Enable Push Notifications</button>
+            <div id="push-active" style="display: none;">
+                <p class="success-text">✓ Push notifications are active on this device!</p>
+                <button id="test-push" class="btn-secondary">Send Test Notification</button>
+            </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 2rem;">
+            <h3>How it works</h3>
+            <ul>
+                <li><strong>Safe & Secure:</strong> We only send notifications for school-related activities.</li>
+                <li><strong>No App Needed:</strong> This uses your phone's built-in browser notifications.</li>
+                <li><strong>Easy Toggle:</strong> You can turn these off anytime in your browser settings.</li>
+            </ul>
+        </div>
+    </section>
+</div>
+
+<script>
+// This is a simplified frontend demonstration of Web Push
+// In a full implementation, this would register a Service Worker and send the subscription to the backend
+document.addEventListener('DOMContentLoaded', () => {
+    const statusDiv = document.getElementById('push-status');
+    const enableBtn = document.getElementById('enable-push');
+    const activeDiv = document.getElementById('push-active');
+    
+    if (!('Notification' in window)) {
+        statusDiv.className = 'alert alert-danger';
+        statusDiv.textContent = 'This browser does not support desktop notifications.';
+        return;
+    }
+
+    function updateUI() {
+        if (Notification.permission === 'granted') {
+            statusDiv.style.display = 'none';
+            enableBtn.style.display = 'none';
+            activeDiv.style.display = 'block';
+        } else if (Notification.permission === 'denied') {
+            statusDiv.className = 'alert alert-danger';
+            statusDiv.textContent = 'Notifications have been blocked. Please enable them in your browser settings.';
+            enableBtn.style.display = 'none';
+        } else {
+            statusDiv.className = 'alert alert-warning';
+            statusDiv.textContent = 'Notifications are not enabled yet.';
+            enableBtn.style.display = 'block';
+        }
+    }
+
+    enableBtn.onclick = () => {
+        Notification.requestPermission().then(permission => {
+            updateUI();
+            if (permission === 'granted') {
+                new Notification('Saint Philip Neri School', {
+                    body: 'Notifications enabled! You will now receive updates on your phone.',
+                    icon: '/static/logo.jpg'
+                });
+            }
+        });
+    };
+
+    document.getElementById('test-push').onclick = () => {
+        new Notification('Test Notification', {
+            body: 'This is what your school reminders will look like!',
+            icon: '/static/logo.jpg'
+        });
+    };
+
+    updateUI();
+});
+</script>
+
+<style>
+.notification-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.success-text {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 4px;
+    border-left: 4px solid #c41e3a;
+}
+
+.info-box h3 {
+    margin-top: 0;
+}
+
+.info-box ul {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}
