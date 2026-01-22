@@ -59,17 +59,40 @@ def parent_dashboard():
     # Check verification status for the UI
     user_eligibilities = [e.category for e in current_user.job_eligibilities] if hasattr(current_user, 'job_eligibilities') else [e.category for e in JobEligibility.query.filter_by(user_id=current_user.id).all()]
     is_verified_child = 'child_interaction' in user_eligibilities
-    pending_child_app = JobApplication.query.filter_by(
-        user_id=current_user.id, 
-        category='child_interaction', 
-        status='pending'
-    ).first()
     
+    # Get the latest application for child interaction
+    child_app = JobApplication.query.filter_by(
+        user_id=current_user.id, 
+        category='child_interaction'
+    ).order_by(JobApplication.submitted_at.desc()).first()
+    
+    # Status logic for individual components
+    # Background Check
+    bg_status = 'not_submitted'
+    if is_verified_child:
+        bg_status = 'approved'
+    elif child_app:
+        if child_app.status == 'pending':
+            bg_status = 'pending'
+        elif child_app.status == 'rejected':
+            bg_status = 'rejected'
+            
+    # Fingerprints
+    fp_status = 'not_submitted'
+    if is_verified_child:
+        fp_status = 'approved'
+    elif child_app and child_app.fingerprint_file_data:
+        if child_app.status == 'pending':
+            fp_status = 'pending'
+        elif child_app.status == 'rejected':
+            fp_status = 'rejected'
+
     return render_template('parent_dashboard.html', 
                          pending_forms=pending_forms,
                          completed_forms=completed_forms,
                          is_verified_child=is_verified_child,
-                         pending_child_app=pending_child_app)
+                         bg_status=bg_status,
+                         fp_status=fp_status)
 
 @app.route('/parent/submit/<int:form_id>', methods=['GET', 'POST'])
 @require_login

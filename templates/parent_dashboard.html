@@ -15,15 +15,23 @@
                     <span class="badge badge-verified">✓ Approved</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">Works with Children:</span>
-                    {% if is_verified_child %}
-                        <span class="badge badge-verified">✓ Verified</span>
+                    <span class="status-label">Background Check:</span>
+                    {% if bg_status == 'approved' %}
+                        <span class="badge badge-approved">✓ Approved</span>
+                    {% elif bg_status == 'pending' %}
+                        <span class="badge badge-pending">⏳ Pending</span>
                     {% else %}
-                        {% if pending_child_app %}
-                            <span class="badge badge-pending">⏳ Pending Review</span>
-                        {% else %}
-                            <span class="badge badge-not-verified">Not Verified</span>
-                        {% endif %}
+                        <span class="badge badge-rejected">Not Approved</span>
+                    {% endif %}
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Fingerprints:</span>
+                    {% if fp_status == 'approved' %}
+                        <span class="badge badge-approved">✓ Approved</span>
+                    {% elif fp_status == 'pending' %}
+                        <span class="badge badge-pending">⏳ Pending</span>
+                    {% else %}
+                        <span class="badge badge-rejected">Not Approved</span>
                     {% endif %}
                 </div>
             </div>
@@ -105,7 +113,7 @@
     color: #555;
 }
 
-.badge-verified {
+.badge-approved {
     background: #28a745;
     color: white;
     padding: 0.25rem 0.75rem;
@@ -121,8 +129,8 @@
     font-size: 0.85rem;
 }
 
-.badge-not-verified {
-    background: #6c757d;
+.badge-rejected {
+    background: #dc3545;
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
