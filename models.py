@@ -119,6 +119,12 @@ class JobApplication(db.Model):
     file_data = db.Column(db.LargeBinary, nullable=True)
     file_name = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(100), nullable=True)
+    
+    # Adding specific background check fields
+    fingerprint_file_data = db.Column(db.LargeBinary, nullable=True)
+    fingerprint_file_name = db.Column(db.String(255), nullable=True)
+    fingerprint_file_type = db.Column(db.String(100), nullable=True)
+    
     status = db.Column(db.String(20), default='pending')
     admin_notes = db.Column(db.Text, nullable=True)
     submitted_at = db.Column(db.DateTime, default=datetime.now)

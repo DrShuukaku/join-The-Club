@@ -22,10 +22,18 @@
 
         <form method="POST" enctype="multipart/form-data" class="form-section">
             <div class="form-group">
-                <label for="document">Upload Document:</label>
+                <label for="document">Upload Background Check:</label>
                 <input type="file" id="document" name="document" class="form-control" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                 <small>Accepted formats: PDF, DOC, DOCX, JPG, PNG</small>
             </div>
+
+            {% if category == 'child_interaction' %}
+            <div class="form-group">
+                <label for="fingerprint">Upload Fingerprints:</label>
+                <input type="file" id="fingerprint" name="fingerprint" class="form-control" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <small>Accepted formats: PDF, DOC, DOCX, JPG, PNG</small>
+            </div>
+            {% endif %}
 
             {% if existing_app %}
             <div class="alert alert-info">

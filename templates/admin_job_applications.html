@@ -38,7 +38,12 @@
                             </td>
                             <td>{{ app.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</td>
                             <td>
-                                <a href="{{ url_for('download_application', app_id=app.id) }}" class="btn-small">Download</a>
+                                <div style="display: flex; flex-direction: column; gap: 5px;">
+                                    <a href="{{ url_for('download_application_file', app_id=app.id, file_type='background') }}" class="btn-small">Background Check</a>
+                                    {% if app.fingerprint_file_data %}
+                                    <a href="{{ url_for('download_application_file', app_id=app.id, file_type='fingerprint') }}" class="btn-small">Fingerprints</a>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td class="actions">
                                 <form method="POST" action="{{ url_for('approve_application', app_id=app.id) }}" style="display: inline;">

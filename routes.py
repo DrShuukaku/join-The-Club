@@ -730,19 +730,32 @@ def apply_for_job(category):
     
     if request.method == 'POST':
         file = request.files.get('document')
+        fingerprint_file = request.files.get('fingerprint')
         
         if not file or not file.filename:
-            flash('Please upload a document.', 'danger')
+            flash('Please upload your background check document.', 'danger')
+            return redirect(request.url)
+        
+        if category == 'child_interaction' and (not fingerprint_file or not fingerprint_file.filename):
+            flash('Please upload your fingerprint document for this category.', 'danger')
             return redirect(request.url)
         
         if not allowed_file(file.filename, file.content_type):
-            flash('Invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed.', 'danger')
+            flash('Invalid background check file type.', 'danger')
+            return redirect(request.url)
+            
+        if fingerprint_file and fingerprint_file.filename and not allowed_file(fingerprint_file.filename, fingerprint_file.content_type):
+            flash('Invalid fingerprint file type.', 'danger')
             return redirect(request.url)
         
         if existing_app:
             existing_app.file_data = file.read()
             existing_app.file_name = file.filename
             existing_app.file_type = file.content_type
+            if fingerprint_file and fingerprint_file.filename:
+                existing_app.fingerprint_file_data = fingerprint_file.read()
+                existing_app.fingerprint_file_name = fingerprint_file.filename
+                existing_app.fingerprint_file_type = fingerprint_file.content_type
             existing_app.submitted_at = datetime.now()
             existing_app.status = 'pending'
         else:
@@ -754,10 +767,14 @@ def apply_for_job(category):
                 file_type=file.content_type,
                 status='pending'
             )
+            if fingerprint_file and fingerprint_file.filename:
+                app_record.fingerprint_file_data = fingerprint_file.read()
+                app_record.fingerprint_file_name = fingerprint_file.filename
+                app_record.fingerprint_file_type = fingerprint_file.content_type
             db.session.add(app_record)
         
         db.session.commit()
-        flash('Your application has been submitted for review!', 'success')
+        flash('Your application with background check documents has been submitted!', 'success')
         return redirect(url_for('parent_view_jobs'))
     
     return render_template('apply_for_job.html', category=category, existing_app=existing_app)
@@ -830,22 +847,31 @@ def reject_application(app_id):
     flash(f'Application rejected.', 'success')
     return redirect(url_for('admin_job_applications'))
 
-@app.route('/download/application/<int:app_id>')
+@app.route('/download/application/<int:app_id>/<file_type>')
 @require_login
-def download_application(app_id):
+def download_application_file(app_id, file_type):
     app_record = JobApplication.query.get_or_404(app_id)
     
     if not current_user.is_admin and app_record.user_id != current_user.id:
         flash('You do not have permission to access this file.', 'danger')
         return redirect(url_for('parent_dashboard'))
     
-    if not app_record.file_data:
-        flash('No file attached to this application.', 'warning')
+    if file_type == 'fingerprint':
+        data = app_record.fingerprint_file_data
+        name = app_record.fingerprint_file_name
+        mimetype = app_record.fingerprint_file_type
+    else:
+        data = app_record.file_data
+        name = app_record.file_name
+        mimetype = app_record.file_type
+
+    if not data:
+        flash('File not found.', 'warning')
         return redirect(request.referrer or url_for('parent_dashboard'))
     
     return send_file(
-        BytesIO(app_record.file_data),
-        download_name=app_record.file_name,
+        BytesIO(data),
+        download_name=name,
         as_attachment=True,
-        mimetype=app_record.file_type
+        mimetype=mimetype
     )
