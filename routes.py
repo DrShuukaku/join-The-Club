@@ -56,9 +56,20 @@ def parent_dashboard():
         else:
             pending_forms.append(form)
     
+    # Check verification status for the UI
+    user_eligibilities = [e.category for e in current_user.job_eligibilities] if hasattr(current_user, 'job_eligibilities') else [e.category for e in JobEligibility.query.filter_by(user_id=current_user.id).all()]
+    is_verified_child = 'child_interaction' in user_eligibilities
+    pending_child_app = JobApplication.query.filter_by(
+        user_id=current_user.id, 
+        category='child_interaction', 
+        status='pending'
+    ).first()
+    
     return render_template('parent_dashboard.html', 
                          pending_forms=pending_forms,
-                         completed_forms=completed_forms)
+                         completed_forms=completed_forms,
+                         is_verified_child=is_verified_child,
+                         pending_child_app=pending_child_app)
 
 @app.route('/parent/submit/<int:form_id>', methods=['GET', 'POST'])
 @require_login

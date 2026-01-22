@@ -7,6 +7,33 @@
     <h1>Welcome, {{ current_user.first_name or 'Parent' }}!</h1>
     
     <section class="dashboard-section">
+        <div class="volunteer-status-card">
+            <h2>Your Volunteer Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">General Volunteering:</span>
+                    <span class="badge badge-verified">✓ Approved</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Works with Children:</span>
+                    {% if is_verified_child %}
+                        <span class="badge badge-verified">✓ Verified</span>
+                    {% else %}
+                        {% if pending_child_app %}
+                            <span class="badge badge-pending">⏳ Pending Review</span>
+                        {% else %}
+                            <span class="badge badge-not-verified">Not Verified</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <a href="{{ url_for('parent_view_jobs') }}" class="btn-primary">View & Sign Up for Events</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-section">
         <h2>Pending Forms ({{ pending_forms|length }})</h2>
         {% if pending_forms %}
             <div class="forms-grid">
@@ -48,4 +75,60 @@
         {% endif %}
     </section>
 </div>
+
+{% block extra_css %}
+<style>
+.volunteer-status-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #c41e3a;
+    margin-bottom: 2rem;
+}
+
+.status-grid {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.badge-verified {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.badge-pending {
+    background: #ffc107;
+    color: #333;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.badge-not-verified {
+    background: #6c757d;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+
 {% endblock %}
