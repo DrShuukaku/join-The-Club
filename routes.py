@@ -741,7 +741,7 @@ def revoke_parent_category(parent_id, category):
 def notification_settings():
     return render_template('push_setup.html')
 
-@app.route('/parent/apply-for-job/<category>')
+@app.route('/parent/apply-for-job/<category>', methods=['GET', 'POST'])
 @require_login
 def apply_for_job(category):
     existing_app = JobApplication.query.filter_by(user_id=current_user.id, category=category).first()
