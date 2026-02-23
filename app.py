@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 import os
+from datetime import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
 import sys
@@ -50,6 +51,10 @@ def init_db():
             except Exception as e:
                 logging.error(f"Failed to create database tables: {e}")
                 raise
+
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now}
 
 @app.before_request
 def ensure_db_initialized():

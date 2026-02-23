@@ -188,7 +188,15 @@ def create_form():
         description = request.form.get('description')
         deadline_str = request.form.get('deadline')
         
-        deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+        if not deadline_str:
+            flash('Please set a deadline for this form.', 'danger')
+            return redirect(url_for('create_form'))
+        
+        try:
+            deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            flash('Invalid deadline format. Please try again.', 'danger')
+            return redirect(url_for('create_form'))
         
         form = Form(
             title=title,
@@ -619,6 +627,24 @@ def admin_service_hours_dashboard():
                          all_labor_records=all_labor_records,
                          classrooms=classrooms,
                          selected_classroom=selected_classroom)
+
+@app.route('/parent/jobs')
+@require_login
+def parent_view_jobs():
+    jobs = Job.query.filter_by(is_active=True).order_by(Job.created_at.desc()).all()
+    
+    user_eligibilities = [e.category for e in JobEligibility.query.filter_by(user_id=current_user.id).all()]
+    is_verified_child = 'child_interaction' in user_eligibilities
+    pending_child_app = JobApplication.query.filter_by(
+        user_id=current_user.id, 
+        category='child_interaction', 
+        status='pending'
+    ).first()
+    
+    return render_template('parent_jobs.html', 
+                         jobs=jobs,
+                         is_verified_child=is_verified_child,
+                         pending_child_app=pending_child_app)
 
 @app.route('/admin/jobs')
 @require_login
