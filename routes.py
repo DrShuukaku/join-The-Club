@@ -802,6 +802,30 @@ def apply_for_job(category):
     
     return render_template('apply_for_job.html', category=category, existing_app=existing_app)
 
+from utils.claude import ask_claude
+
+@app.route('/admin/ai-assistant', methods=['GET', 'POST'])
+@require_login
+def admin_ai_assistant():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    
+    response = None
+    prompt = None
+    
+    if request.method == 'POST':
+        prompt = request.form.get('prompt')
+        if prompt:
+            try:
+                # Add school context to the prompt
+                system_context = "You are an AI assistant for Saint Philip Neri Catholic School paperwork system. "
+                response = ask_claude(system_context + prompt)
+            except Exception as e:
+                flash(f"AI Assistant error: {str(e)}", 'danger')
+                
+    return render_template('admin_ai_assistant.html', response=response, prompt=prompt)
+
 @app.route('/admin/job-applications')
 @require_login
 def admin_job_applications():
