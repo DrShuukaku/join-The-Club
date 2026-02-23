@@ -17,7 +17,7 @@ deploymentTarget = "autoscale"
 
 [agent]
 expertMode = true
-integrations = ["python_log_in_with_replit:1.0.0", "replitmail:1.0.0"]
+integrations = ["python_log_in_with_replit:1.0.0", "replitmail:1.0.0", "python_anthropic_ai_integrations:1.0.0"]
 
 [workflows]
 runButton = "Project"
