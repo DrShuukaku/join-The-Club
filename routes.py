@@ -922,7 +922,10 @@ def download_application_file(app_id, file_type):
 
     if not data:
         flash('File not found.', 'warning')
-        return redirect(request.referrer or url_for('parent_dashboard'))
+        referrer = request.referrer
+        if referrer and urlparse(referrer).netloc == urlparse(request.host_url).netloc:
+            return redirect(referrer)
+        return redirect(url_for('parent_dashboard'))
     
     return send_file(
         BytesIO(data),
