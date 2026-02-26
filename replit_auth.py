@@ -4,6 +4,8 @@ import uuid
 from functools import wraps
 from urllib.parse import urlencode
 
+import requests
+
 from flask import g, session, redirect, request, render_template, url_for
 from flask_dance.consumer import (
     OAuth2ConsumerBlueprint,
@@ -132,9 +134,27 @@ def save_user(user_claims):
     db.session.commit()
     return merged_user
 
+_jwks_clients = {}
+
+def _get_jwks_client(issuer_url):
+    if issuer_url not in _jwks_clients:
+        discovery = requests.get(issuer_url + "/.well-known/openid-configuration").json()
+        _jwks_clients[issuer_url] = jwt.PyJWKClient(discovery["jwks_uri"])
+    return _jwks_clients[issuer_url]
+
 @oauth_authorized.connect
 def logged_in(blueprint, token):
-    user_claims = jwt.decode(token['id_token'], options={"verify_signature": False})
+    issuer_url = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
+    repl_id = os.environ['REPL_ID']
+    jwks_client = _get_jwks_client(issuer_url)
+    signing_key = jwks_client.get_signing_key_from_jwt(token['id_token'])
+    user_claims = jwt.decode(
+        token['id_token'],
+        signing_key,
+        algorithms=["RS256"],
+        audience=repl_id,
+        issuer=issuer_url,
+    )
     user = save_user(user_claims)
     login_user(user)
     blueprint.token = token
