@@ -38,6 +38,23 @@ db = SQLAlchemy(app, model_class=Base)
 
 _db_initialized = False
 
+def run_migrations():
+    """Add any missing columns to existing tables without dropping data."""
+    migrations = [
+        "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS category VARCHAR(100) NOT NULL DEFAULT 'general'",
+        "ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS fingerprint_file_data BYTEA",
+        "ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS fingerprint_file_name VARCHAR(255)",
+        "ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS fingerprint_file_type VARCHAR(100)",
+    ]
+    with db.engine.connect() as conn:
+        for statement in migrations:
+            try:
+                conn.execute(db.text(statement))
+            except Exception as e:
+                logging.warning(f"Migration skipped or failed: {e}")
+        conn.commit()
+    logging.info("Database migrations applied successfully")
+
 def init_db():
     """Initialize database tables. Called on first request."""
     global _db_initialized
@@ -46,6 +63,7 @@ def init_db():
             try:
                 import models
                 db.create_all()
+                run_migrations()
                 logging.info("Database tables created successfully")
                 _db_initialized = True
             except Exception as e:
