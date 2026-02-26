@@ -789,19 +789,19 @@ def apply_for_job(category):
         
         if not file or not file.filename:
             flash('Please upload your background check document.', 'danger')
-            return redirect(request.url)
+            return redirect(url_for('apply_for_job', category=category))
         
         if category == 'child_interaction' and (not fingerprint_file or not fingerprint_file.filename):
             flash('Please upload your fingerprint document for this category.', 'danger')
-            return redirect(request.url)
+            return redirect(url_for('apply_for_job', category=category))
         
         if not allowed_file(file.filename, file.content_type):
             flash('Invalid background check file type.', 'danger')
-            return redirect(request.url)
+            return redirect(url_for('apply_for_job', category=category))
             
         if fingerprint_file and fingerprint_file.filename and not allowed_file(fingerprint_file.filename, fingerprint_file.content_type):
             flash('Invalid fingerprint file type.', 'danger')
-            return redirect(request.url)
+            return redirect(url_for('apply_for_job', category=category))
         
         if existing_app:
             existing_app.file_data = file.read()
