@@ -106,7 +106,7 @@ def submit_form(form_id):
         if file and file.filename:
             if not allowed_file(file.filename, file.content_type):
                 flash('Invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed.', 'danger')
-                return redirect(request.url)
+                return redirect(url_for('submit_form', form_id=form_id))
         
         existing = Submission.query.filter_by(form_id=form_id, user_id=current_user.id).first()
         if existing:
