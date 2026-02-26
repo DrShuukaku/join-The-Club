@@ -30,9 +30,6 @@
                             <a href="{{ url_for('notification_settings') }}">Notifications</a>
                             <a href="{{ url_for('parent_labor_hours') }}">Labor Hours</a>
                             <a href="{{ url_for('parent_profile') }}">Profile</a>
-                            <form method="POST" action="{{ url_for('make_admin') }}" style="display: inline;">
-                                <button type="submit" class="btn-link">Become Admin</button>
-                            </form>
                         {% endif %}
                         <span class="user-info">{{ current_user.first_name or current_user.email }}</span>
                         <a href="{{ url_for('replit_auth.logout') }}" class="btn-logout">Logout</a>
