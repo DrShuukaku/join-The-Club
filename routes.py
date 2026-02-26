@@ -1,4 +1,5 @@
 from flask import session, render_template, request, redirect, url_for, flash, send_file, jsonify
+from urllib.parse import urlparse
 from io import BytesIO
 from datetime import datetime
 import os
@@ -276,7 +277,12 @@ def download_file(submission_id):
     
     if not submission.file_data:
         flash('No file attached to this submission.', 'warning')
-        return redirect(request.referrer or url_for('parent_dashboard'))
+        referrer = request.referrer
+        if referrer:
+            parsed = urlparse(referrer)
+            if parsed.netloc and parsed.netloc != request.host:
+                referrer = None
+        return redirect(referrer or url_for('parent_dashboard'))
     
     return send_file(
         BytesIO(submission.file_data),
