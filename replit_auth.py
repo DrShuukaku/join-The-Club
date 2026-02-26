@@ -124,15 +124,18 @@ def make_replit_blueprint():
     return replit_bp
 
 def save_user(user_claims):
-    user = User()
-    user.id = user_claims['sub']
+    user_id = user_claims['sub']
+    user = User.query.get(user_id)
+    if user is None:
+        user = User()
+        user.id = user_id
+        db.session.add(user)
     user.email = user_claims.get('email')
     user.first_name = user_claims.get('first_name')
     user.last_name = user_claims.get('last_name')
     user.profile_image_url = user_claims.get('profile_image_url')
-    merged_user = db.session.merge(user)
     db.session.commit()
-    return merged_user
+    return user
 
 _jwks_clients = {}
 
