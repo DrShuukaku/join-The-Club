@@ -45,47 +45,47 @@
     {% else %}
     <section class="dashboard-section">
         <h2>Start New Work Session</h2>
+        {% if available_jobs %}
         <form method="POST" action="{{ url_for('labor_check_in') }}" class="submission-form">
             <div class="form-group">
-                <label for="task_description">Select volunteer task:</label>
+                <label for="task_category">Select a volunteer task:</label>
                 <select id="task_category" name="task_description" required onchange="toggleCustomInput(this)">
-                    <option value="">-- Select a task --</option>
-                    <option value="Classroom Cleaning">Classroom Cleaning</option>
-                    <option value="Event Setup/Teardown">Event Setup/Teardown</option>
-                    <option value="Office Assistance">Office Assistance</option>
-                    <option value="Library Support">Library Support</option>
-                    <option value="Cafeteria Support">Cafeteria Support</option>
-                    <option value="Playground Supervision">Playground Supervision</option>
-                    <option value="Field Trip Chaperone">Field Trip Chaperone</option>
-                    <option value="Fundraising Activities">Fundraising Activities</option>
-                    <option value="Maintenance/Groundskeeping">Maintenance/Groundskeeping</option>
-                    <option value="Special Event Volunteer">Special Event Volunteer</option>
-                    <option value="Custom">Other (Custom Task)</option>
+                    <option value="">-- Choose a task --</option>
+                    {% for job in available_jobs %}
+                    <option value="{{ job.title }}">
+                        {{ job.title }}{% if job.category == 'child_interaction' %} (Works with Children){% endif %}
+                    </option>
+                    {% endfor %}
+                    <option value="Other">Other (describe below)</option>
                 </select>
             </div>
             <div class="form-group" id="custom_task_group" style="display: none;">
-                <label for="custom_task">Describe your custom task:</label>
-                <input type="text" id="custom_task" name="custom_task" 
-                       placeholder="Enter custom task description">
+                <label for="custom_task">Describe your task:</label>
+                <input type="text" id="custom_task" name="custom_task"
+                       placeholder="e.g., Helping with the science fair">
             </div>
             <button type="submit" class="btn-primary">Check In</button>
         </form>
-    </section>
-    
-    <script>
-    function toggleCustomInput(select) {
-        const customGroup = document.getElementById('custom_task_group');
-        const customInput = document.getElementById('custom_task');
-        if (select.value === 'Custom') {
-            customGroup.style.display = 'block';
-            customInput.required = true;
-        } else {
-            customGroup.style.display = 'none';
-            customInput.required = false;
-            customInput.value = '';
+        <script>
+        function toggleCustomInput(select) {
+            const customGroup = document.getElementById('custom_task_group');
+            const customInput = document.getElementById('custom_task');
+            if (select.value === 'Other') {
+                customGroup.style.display = 'block';
+                customInput.required = true;
+            } else {
+                customGroup.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
         }
-    }
-    </script>
+        </script>
+        {% else %}
+        <div class="no-jobs-notice">
+            <p>No volunteer tasks are currently available. The admin hasn't posted any active jobs yet — check back soon!</p>
+        </div>
+        {% endif %}
+    </section>
     {% endif %}
 
     <section class="dashboard-section">
@@ -137,4 +137,15 @@
         {% endif %}
     </section>
 </div>
+
+<style>
+.no-jobs-notice {
+    background: #f8f9fa;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    padding: 1.5rem;
+    text-align: center;
+    color: #666;
+}
+</style>
 {% endblock %}

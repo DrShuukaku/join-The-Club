@@ -297,10 +297,22 @@ def parent_labor_hours():
     labor_records = LaborHours.query.filter_by(user_id=current_user.id).order_by(LaborHours.created_at.desc()).all()
     active_session = LaborHours.query.filter_by(user_id=current_user.id, status='checked_in').first()
     total_hours = sum([record.hours_worked for record in labor_records if record.hours_worked])
-    return render_template('parent_labor_hours.html', 
+
+    is_verified_child = JobEligibility.query.filter_by(
+        user_id=current_user.id, category='child_interaction'
+    ).first() is not None
+
+    all_jobs = Job.query.filter_by(is_active=True).order_by(Job.title).all()
+    available_jobs = [
+        j for j in all_jobs
+        if j.category == 'general' or (j.category == 'child_interaction' and is_verified_child)
+    ]
+
+    return render_template('parent_labor_hours.html',
                          labor_records=labor_records,
                          active_session=active_session,
-                         total_hours=total_hours)
+                         total_hours=total_hours,
+                         available_jobs=available_jobs)
 
 @app.route('/parent/labor/check-in', methods=['POST'])
 @require_login
@@ -308,7 +320,7 @@ def labor_check_in():
     task_description = request.form.get('task_description')
     custom_task = request.form.get('custom_task')
     
-    if task_description == 'Custom' and custom_task:
+    if task_description in ('Custom', 'Other') and custom_task:
         task_description = custom_task
     
     if not task_description:
