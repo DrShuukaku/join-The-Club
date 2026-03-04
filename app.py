@@ -53,6 +53,20 @@ def run_migrations():
             except Exception as e:
                 logging.warning(f"Migration skipped or failed: {e}")
         conn.commit()
+
+    admin_emails = [e.strip().lower() for e in os.environ.get('ADMIN_EMAILS', '').split(',') if e.strip()]
+    if admin_emails:
+        try:
+            from models import User
+            for email in admin_emails:
+                user = User.query.filter_by(email=email).first()
+                if user and not user.is_admin:
+                    user.is_admin = True
+                    db.session.commit()
+                    logging.info(f"Admin privileges restored for {email}")
+        except Exception as e:
+            logging.warning(f"Admin email sync failed: {e}")
+
     logging.info("Database migrations applied successfully")
 
 def init_db():
