@@ -4,6 +4,8 @@
 
 {% block content %}
 <div class="container dashboard">
+    {% set active_tab = 'profile' %}
+    {% include '_parent_tabs.html' %}
     <h1>My Profile</h1>
     
     <section class="dashboard-section">

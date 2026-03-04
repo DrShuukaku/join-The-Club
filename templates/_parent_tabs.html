@@ -1,0 +1,6 @@
+<nav class="parent-tabs">
+    <a href="{{ url_for('parent_dashboard') }}" class="parent-tab {% if active_tab == 'forms' %}active{% endif %}">My Forms</a>
+    <a href="{{ url_for('parent_view_jobs') }}" class="parent-tab {% if active_tab == 'jobs' %}active{% endif %}">Jobs</a>
+    <a href="{{ url_for('parent_labor_hours') }}" class="parent-tab {% if active_tab == 'labor' %}active{% endif %}">Labor Hours</a>
+    <a href="{{ url_for('parent_profile') }}" class="parent-tab {% if active_tab == 'profile' %}active{% endif %}">Profile</a>
+</nav>

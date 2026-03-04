@@ -4,6 +4,8 @@
 
 {% block content %}
 <div class="container dashboard">
+    {% set active_tab = 'labor' %}
+    {% include '_parent_tabs.html' %}
     <h1>Volunteer Labor Hours</h1>
     
     <div class="stats-grid" style="margin-bottom: 2rem;">

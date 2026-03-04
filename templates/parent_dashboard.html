@@ -4,6 +4,8 @@
 
 {% block content %}
 <div class="container dashboard">
+    {% set active_tab = 'forms' %}
+    {% include '_parent_tabs.html' %}
     <h1>Welcome, {{ current_user.first_name or 'Parent' }}!</h1>
     {% if not current_user.first_name %}
     <p style="margin: -0.5rem 0 1.5rem; font-size: 0.9rem; color: #888;">
