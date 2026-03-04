@@ -4,6 +4,8 @@
 
 {% block content %}
 <div class="container dashboard">
+    {% set active_admin_tab = 'overview' %}
+    {% include '_admin_tabs.html' %}
     <div class="admin-header">
         <h1>Admin Dashboard</h1>
         <div style="display: flex; gap: 1rem;">

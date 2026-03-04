@@ -1,0 +1,6 @@
+<nav class="parent-tabs admin-tabs">
+    <a href="{{ url_for('admin_dashboard') }}" class="parent-tab {% if active_admin_tab == 'overview' %}active{% endif %}">Overview</a>
+    <a href="{{ url_for('admin_job_applications') }}" class="parent-tab {% if active_admin_tab == 'applications' %}active{% endif %}">Applications</a>
+    <a href="{{ url_for('admin_parent_verification') }}" class="parent-tab {% if active_admin_tab == 'verify' %}active{% endif %}">Verify Parents</a>
+    <a href="{{ url_for('admin_labor_verification') }}" class="parent-tab {% if active_admin_tab == 'labor' %}active{% endif %}">Labor Verification</a>
+</nav>

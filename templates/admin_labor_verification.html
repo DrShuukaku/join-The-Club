@@ -4,6 +4,8 @@
 
 {% block content %}
 <div class="container dashboard">
+    {% set active_admin_tab = 'labor' %}
+    {% include '_admin_tabs.html' %}
     <h1>Volunteer Labor Verification</h1>
     
     <section class="dashboard-section">
