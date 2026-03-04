@@ -1,38 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Jobs - Admin Dashboard{% endblock %}
+{% block title %}Manage Volunteer Jobs - Admin{% endblock %}
 
 {% block content %}
 <div class="container dashboard">
     <div class="admin-header">
         <h1>Volunteer Job Postings</h1>
-        <a href="{{ url_for('post_job') }}" class="btn-primary">Post New Job</a>
+        <a href="{{ url_for('post_job') }}" class="btn-primary">+ Post New Job</a>
     </div>
 
     <section class="dashboard-section">
         {% if jobs %}
             <div class="jobs-grid">
                 {% for job in jobs %}
+                {% set count = signup_counts.get(job.id, 0) %}
                 <div class="job-card">
                     <div class="job-header">
-                        <h3>{{ job.title }}</h3>
+                        <div>
+                            <h3>{{ job.title }}</h3>
+                            {% if job.category == 'child_interaction' %}
+                                <span class="badge badge-special">Works with Children</span>
+                            {% else %}
+                                <span class="badge badge-general">General</span>
+                            {% endif %}
+                        </div>
                         <span class="job-date">{{ job.created_at.strftime('%b %d, %Y') }}</span>
                     </div>
+
                     {% if job.description %}
-                    <div class="job-description">
-                        {{ job.description }}
-                    </div>
+                    <p class="job-description">{{ job.description }}</p>
                     {% endif %}
+
+                    <div class="signup-summary">
+                        <span class="signup-count">
+                            <strong>{{ count }}</strong> {{ 'parent' if count == 1 else 'parents' }} signed up
+                        </span>
+                        <a href="{{ url_for('admin_job_signups', job_id=job.id) }}" class="btn-checkin-link">
+                            View Sign-ups & Check In →
+                        </a>
+                    </div>
+
                     <div class="job-actions">
                         <form method="POST" action="{{ url_for('deactivate_job', job_id=job.id) }}" style="display: inline;">
-                            <button type="submit" class="btn-small btn-danger" onclick="return confirm('Are you sure you want to deactivate this job?')">Deactivate</button>
+                            <button type="submit" class="btn-small btn-danger" onclick="return confirm('Deactivate this job? Parents will no longer see it.')">Deactivate</button>
                         </form>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="empty-state">No active jobs posted yet. <a href="{{ url_for('post_job') }}">Post your first job!</a></p>
+            <div class="empty-state">
+                <p>No active jobs posted yet.</p>
+                <a href="{{ url_for('post_job') }}" class="btn-primary" style="display:inline-block; margin-top:1rem;">Post your first job</a>
+            </div>
         {% endif %}
     </section>
 </div>
@@ -40,67 +60,63 @@
 <style>
 .jobs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 1.5rem;
 }
-
 .job-card {
     background: white;
     border: 1px solid #ddd;
     border-left: 4px solid #c41e3a;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
-
 .job-header {
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    margin-bottom: 1rem;
+    align-items: flex-start;
 }
-
-.job-header h3 {
-    margin: 0;
-    color: #333;
-}
-
+.job-header h3 { margin: 0 0 0.4rem; color: #222; font-size: 1.1rem; }
 .job-date {
     background: #f5f5f5;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: #666;
+    white-space: nowrap;
 }
+.job-description { color: #555; font-size: 0.95rem; line-height: 1.6; margin: 0; }
+.badge { padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; display: inline-block; }
+.badge-general { background: #e9ecef; color: #495057; }
+.badge-special { background: #fff3cd; color: #856404; font-weight: 600; }
 
-.job-description {
-    color: #555;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.job-actions {
+.signup-summary {
     display: flex;
-    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.25rem;
 }
-
-.btn-small {
-    padding: 0.5rem 1rem;
+.signup-count { font-size: 0.95rem; color: #444; }
+.btn-checkin-link {
+    color: #c41e3a;
+    font-weight: 600;
     font-size: 0.9rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    text-decoration: none;
+    white-space: nowrap;
 }
+.btn-checkin-link:hover { text-decoration: underline; }
 
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-}
+.job-actions { display: flex; gap: 0.5rem; padding-top: 0.25rem; }
+.btn-small { padding: 0.45rem 1rem; font-size: 0.88rem; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+.btn-danger { background: #dc3545; color: white; }
+.btn-danger:hover { background: #c82333; }
+.empty-state { text-align: center; padding: 3rem; color: #888; }
 </style>
 {% endblock %}

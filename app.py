@@ -76,12 +76,15 @@ def init_db():
         with app.app_context():
             try:
                 import models
-                db.create_all()
+                try:
+                    db.create_all()
+                except Exception:
+                    db.session.rollback()
                 run_migrations()
                 logging.info("Database tables created successfully")
                 _db_initialized = True
             except Exception as e:
-                logging.error(f"Failed to create database tables: {e}")
+                logging.error(f"Failed to initialize database: {e}")
                 raise
 
 @app.context_processor

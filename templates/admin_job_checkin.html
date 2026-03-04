@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Check-In: {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="container dashboard">
+    <div class="admin-header">
+        <div>
+            <h1>{{ job.title }}</h1>
+            <p class="subtitle">
+                {% if job.category == 'child_interaction' %}
+                    <span class="badge badge-special">Works with Children</span>
+                {% else %}
+                    <span class="badge badge-general">General</span>
+                {% endif %}
+                &nbsp; Posted {{ job.created_at.strftime('%B %d, %Y') }}
+            </p>
+        </div>
+        <a href="{{ url_for('admin_jobs') }}" class="btn-secondary">← Back to Jobs</a>
+    </div>
+
+    {% set checked_in_count = signups | selectattr('checked_in') | list | length %}
+    {% set total = signups | length %}
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-number">{{ total }}</span>
+            <span class="stat-label">Signed Up</span>
+        </div>
+        <div class="stat-card stat-green">
+            <span class="stat-number">{{ checked_in_count }}</span>
+            <span class="stat-label">Checked In</span>
+        </div>
+        <div class="stat-card stat-grey">
+            <span class="stat-number">{{ total - checked_in_count }}</span>
+            <span class="stat-label">Not Yet Arrived</span>
+        </div>
+    </div>
+
+    <section class="dashboard-section">
+        {% if signups %}
+            <table class="checkin-table">
+                <thead>
+                    <tr>
+                        <th>Parent</th>
+                        <th>Email</th>
+                        <th>Signed Up</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for signup in signups %}
+                    <tr class="{{ 'row-checked-in' if signup.checked_in else '' }}">
+                        <td>
+                            <strong>{{ signup.user.first_name or '' }} {{ signup.user.last_name or '' }}</strong>
+                            {% if not signup.user.first_name and not signup.user.last_name %}
+                                <em style="color:#999;">No name on file</em>
+                            {% endif %}
+                        </td>
+                        <td>{{ signup.user.email or '—' }}</td>
+                        <td>{{ signup.signed_up_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                        <td>
+                            {% if signup.checked_in %}
+                                <span class="badge badge-in">✓ Checked In</span>
+                                <br><small class="checked-time">{{ signup.checked_in_at.strftime('%I:%M %p') if signup.checked_in_at else '' }}</small>
+                            {% else %}
+                                <span class="badge badge-waiting">Not Arrived</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signup.checked_in %}
+                                <form method="POST" action="{{ url_for('admin_undo_checkin', job_id=job.id, signup_id=signup.id) }}">
+                                    <button type="submit" class="btn-undo">Undo</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('admin_checkin_parent', job_id=job.id, signup_id=signup.id) }}">
+                                    <button type="submit" class="btn-checkin">Check In</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <p>No parents have signed up for this event yet.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+.subtitle { margin: 0.25rem 0 0; color: #666; font-size: 0.95rem; }
+.badge { padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; display: inline-block; }
+.badge-general { background: #e9ecef; color: #495057; }
+.badge-special { background: #fff3cd; color: #856404; font-weight: 600; }
+
+.stats-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.stat-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.25rem 2rem;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.stat-green { border-color: #c3e6cb; background: #d4edda; }
+.stat-grey { border-color: #dee2e6; background: #f8f9fa; }
+.stat-number { display: block; font-size: 2rem; font-weight: 700; color: #333; line-height: 1; }
+.stat-label { display: block; font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+
+.checkin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.checkin-table thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #c41e3a;
+}
+.checkin-table th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+.checkin-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+}
+.row-checked-in { background: #f0fff4; }
+.row-checked-in td { color: #333; }
+.checked-time { color: #888; }
+
+.badge-in { background: #28a745; color: white; font-weight: 600; }
+.badge-waiting { background: #e9ecef; color: #666; }
+
+.btn-checkin {
+    background: #c41e3a;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.1rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-checkin:hover { background: #a01729; }
+
+.btn-undo {
+    background: none;
+    border: 1px solid #ccc;
+    color: #888;
+    padding: 0.45rem 0.9rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.btn-undo:hover { border-color: #dc3545; color: #dc3545; }
+
+.empty-state { text-align: center; padding: 3rem; color: #888; }
+</style>
+{% endblock %}

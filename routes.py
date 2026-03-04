@@ -7,7 +7,7 @@ import qrcode
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
 from flask_login import current_user
-from models import User, Form, Submission, LaborHours, Job, JobEligibility, JobApplication
+from models import User, Form, Submission, LaborHours, Job, JobEligibility, JobApplication, JobSignup
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 ALLOWED_MIMETYPES = {
@@ -638,19 +638,57 @@ def admin_service_hours_dashboard():
 @require_login
 def parent_view_jobs():
     jobs = Job.query.filter_by(is_active=True).order_by(Job.created_at.desc()).all()
-    
+
     user_eligibilities = [e.category for e in JobEligibility.query.filter_by(user_id=current_user.id).all()]
     is_verified_child = 'child_interaction' in user_eligibilities
     pending_child_app = JobApplication.query.filter_by(
-        user_id=current_user.id, 
-        category='child_interaction', 
+        user_id=current_user.id,
+        category='child_interaction',
         status='pending'
     ).first()
-    
-    return render_template('parent_jobs.html', 
+
+    user_signups = {s.job_id for s in JobSignup.query.filter_by(user_id=current_user.id).all()}
+
+    return render_template('parent_jobs.html',
                          jobs=jobs,
                          is_verified_child=is_verified_child,
-                         pending_child_app=pending_child_app)
+                         pending_child_app=pending_child_app,
+                         user_signups=user_signups)
+
+@app.route('/parent/jobs/<int:job_id>/signup', methods=['POST'])
+@require_login
+def signup_for_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    if not job.is_active:
+        flash('This job is no longer available.', 'warning')
+        return redirect(url_for('parent_view_jobs'))
+
+    if job.category == 'child_interaction':
+        is_verified = JobEligibility.query.filter_by(user_id=current_user.id, category='child_interaction').first()
+        if not is_verified:
+            flash('You need to be verified for child-interaction jobs before signing up.', 'danger')
+            return redirect(url_for('parent_view_jobs'))
+
+    existing = JobSignup.query.filter_by(job_id=job_id, user_id=current_user.id).first()
+    if existing:
+        flash('You are already signed up for this job.', 'info')
+        return redirect(url_for('parent_view_jobs'))
+
+    signup = JobSignup(job_id=job_id, user_id=current_user.id)
+    db.session.add(signup)
+    db.session.commit()
+    flash(f'You are signed up for "{job.title}"!', 'success')
+    return redirect(url_for('parent_view_jobs'))
+
+@app.route('/parent/jobs/<int:job_id>/unsignup', methods=['POST'])
+@require_login
+def unsignup_from_job(job_id):
+    signup = JobSignup.query.filter_by(job_id=job_id, user_id=current_user.id).first()
+    if signup:
+        db.session.delete(signup)
+        db.session.commit()
+        flash('You have cancelled your sign-up.', 'info')
+    return redirect(url_for('parent_view_jobs'))
 
 @app.route('/admin/jobs')
 @require_login
@@ -660,7 +698,47 @@ def admin_jobs():
         return redirect(url_for('parent_dashboard'))
     
     jobs = Job.query.filter_by(is_active=True).order_by(Job.created_at.desc()).all()
-    return render_template('admin_jobs.html', jobs=jobs)
+    signup_counts = {
+        job.id: JobSignup.query.filter_by(job_id=job.id).count()
+        for job in jobs
+    }
+    return render_template('admin_jobs.html', jobs=jobs, signup_counts=signup_counts)
+
+@app.route('/admin/jobs/<int:job_id>/signups')
+@require_login
+def admin_job_signups(job_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    job = Job.query.get_or_404(job_id)
+    signups = JobSignup.query.filter_by(job_id=job_id).order_by(JobSignup.signed_up_at).all()
+    return render_template('admin_job_checkin.html', job=job, signups=signups)
+
+@app.route('/admin/jobs/<int:job_id>/checkin/<int:signup_id>', methods=['POST'])
+@require_login
+def admin_checkin_parent(job_id, signup_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    signup = JobSignup.query.get_or_404(signup_id)
+    signup.checked_in = True
+    signup.checked_in_at = datetime.now()
+    signup.checked_in_by_admin_id = current_user.id
+    db.session.commit()
+    flash(f'{signup.user.first_name or signup.user.email} checked in successfully.', 'success')
+    return redirect(url_for('admin_job_signups', job_id=job_id))
+
+@app.route('/admin/jobs/<int:job_id>/undo-checkin/<int:signup_id>', methods=['POST'])
+@require_login
+def admin_undo_checkin(job_id, signup_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    signup = JobSignup.query.get_or_404(signup_id)
+    signup.checked_in = False
+    signup.checked_in_at = None
+    signup.checked_in_by_admin_id = None
+    db.session.commit()
+    flash('Check-in undone.', 'info')
+    return redirect(url_for('admin_job_signups', job_id=job_id))
 
 @app.route('/admin/jobs/post', methods=['GET', 'POST'])
 @require_login

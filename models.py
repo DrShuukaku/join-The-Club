@@ -111,6 +111,21 @@ class JobEligibility(db.Model):
     
     user = db.relationship('User')
 
+class JobSignup(db.Model):
+    __tablename__ = 'job_signups'
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    signed_up_at = db.Column(db.DateTime, default=datetime.now)
+    checked_in = db.Column(db.Boolean, default=False)
+    checked_in_at = db.Column(db.DateTime, nullable=True)
+    checked_in_by_admin_id = db.Column(db.String, nullable=True)
+
+    __table_args__ = (UniqueConstraint('job_id', 'user_id', name='uq_job_user_signup'),)
+
+    job = db.relationship('Job')
+    user = db.relationship('User')
+
 class JobApplication(db.Model):
     __tablename__ = 'job_applications'
     id = db.Column(db.Integer, primary_key=True)

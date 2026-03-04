@@ -1,239 +1,215 @@
 {% extends "base.html" %}
 
-{% block title %}Available Jobs - Parent Dashboard{% endblock %}
+{% block title %}Available Volunteer Jobs{% endblock %}
 
 {% block content %}
 <div class="container dashboard">
     <div class="admin-header">
-        <h1>Available Volunteer Jobs</h1>
-        <a href="{{ url_for('parent_dashboard') }}" class="btn-secondary">Back to My Forms</a>
+        <h1>Volunteer Opportunities</h1>
+        <a href="{{ url_for('parent_dashboard') }}" class="btn-secondary">Back to Dashboard</a>
     </div>
 
-    <section class="dashboard-section">
-        <div class="eligibility-status">
-            <h3>Your Verification Status</h3>
-            <div class="status-grid">
-                <div class="status-item">
-                    <span class="status-label">General Volunteering:</span>
-                    <span class="badge badge-verified">✓ Active</span>
+    <section class="dashboard-section verification-banner">
+        <h3>Your Volunteer Status</h3>
+        <div class="status-grid">
+            <div class="status-card status-ok">
+                <span class="status-icon">✓</span>
+                <div>
+                    <strong>General Volunteering</strong>
+                    <p>You are eligible to sign up for all general events.</p>
                 </div>
-                <div class="status-item">
-                    <span class="status-label">Works with Children:</span>
+            </div>
+            <div class="status-card {{ 'status-ok' if is_verified_child else ('status-pending' if pending_child_app else 'status-locked') }}">
+                <span class="status-icon">{{ '✓' if is_verified_child else ('⏳' if pending_child_app else '🔒') }}</span>
+                <div>
+                    <strong>Works with Children</strong>
                     {% if is_verified_child %}
-                        <span class="badge badge-verified">✓ Verified</span>
+                        <p>Verified — you can sign up for all events.</p>
+                    {% elif pending_child_app %}
+                        <p>Your documents are under review. You'll be notified once approved.</p>
                     {% else %}
-                        {% if pending_child_app %}
-                            <span class="badge badge-pending">⏳ Review Pending</span>
-                        {% else %}
-                            <span class="badge badge-not-verified">Not Verified</span>
-                            <a href="{{ url_for('apply_for_job', category='child_interaction') }}" class="btn-small-link">Apply for Access</a>
-                        {% endif %}
+                        <p>Requires a background check and fingerprints.
+                            <a href="{{ url_for('apply_for_job', category='child_interaction') }}" class="verify-link">Submit documents →</a>
+                        </p>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </section>
 
-        {% if jobs %}
+    {% if jobs %}
+        <section class="dashboard-section">
+            <h2 style="margin-bottom: 1.5rem;">Open Events</h2>
             <div class="jobs-list">
                 {% for job in jobs %}
-                <div class="job-item">
-                    <div class="job-header">
-                        <h3>{{ job.title }}</h3>
-                        <span class="job-category">
+                {% set signed_up = job.id in user_signups %}
+                {% set needs_verification = job.category == 'child_interaction' and not is_verified_child %}
+                <div class="job-card {{ 'job-signed-up' if signed_up else '' }}">
+                    <div class="job-top">
+                        <div>
+                            <h3>{{ job.title }}</h3>
                             {% if job.category == 'child_interaction' %}
                                 <span class="badge badge-special">Works with Children</span>
                             {% else %}
                                 <span class="badge badge-general">General</span>
                             {% endif %}
-                        </span>
+                        </div>
+                        <div class="signup-action">
+                            {% if signed_up %}
+                                <span class="signed-up-label">✓ Signed Up</span>
+                                <form method="POST" action="{{ url_for('unsignup_from_job', job_id=job.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn-cancel-signup" onclick="return confirm('Cancel your sign-up for this event?')">Cancel</button>
+                                </form>
+                            {% elif needs_verification %}
+                                {% if pending_child_app %}
+                                    <span class="badge-pending-small">⏳ Verification pending</span>
+                                {% else %}
+                                    <a href="{{ url_for('apply_for_job', category='child_interaction') }}" class="btn-get-verified">Get Verified First</a>
+                                {% endif %}
+                            {% else %}
+                                <form method="POST" action="{{ url_for('signup_for_job', job_id=job.id) }}">
+                                    <button type="submit" class="btn-signup">Sign Up</button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                     {% if job.description %}
-                    <div class="job-body">
-                        {{ job.description }}
-                    </div>
+                    <p class="job-desc">{{ job.description }}</p>
                     {% endif %}
-                    <div class="job-footer">
-                        <small class="job-posted">Posted {{ job.created_at.strftime('%b %d, %Y') }}</small>
-                        {% if job.category != 'general' %}
-                        <a href="{{ url_for('apply_for_job', category=job.category) }}" class="btn-apply">Apply Now</a>
-                        {% endif %}
-                    </div>
+                    <p class="job-meta">Posted {{ job.created_at.strftime('%B %d, %Y') }}</p>
                 </div>
                 {% endfor %}
             </div>
-        {% else %}
+        </section>
+    {% else %}
+        <section class="dashboard-section">
             <div class="empty-state">
-                <p>No jobs are currently available to you. Check back soon!</p>
-                <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
-                    Some jobs may require admin verification. Contact your school administrator if you'd like to be verified for additional job categories.
-                </p>
+                <p>No volunteer opportunities are posted yet. Check back soon!</p>
             </div>
-        {% endif %}
-    </section>
+        </section>
+    {% endif %}
 </div>
 
 <style>
-.jobs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.job-item {
-    background: white;
-    border: 1px solid #ddd;
-    border-left: 4px solid #c41e3a;
-    border-radius: 4px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.job-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 1rem;
-}
-
-.job-header h3 {
-    margin: 0;
-    color: #333;
-}
-
-.job-category {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.badge-general {
-    background: #e9ecef;
-    color: #495057;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-}
-
-.badge-special {
-    background: #ffc107;
-    color: #333;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.job-body {
-    color: #555;
-    line-height: 1.6;
-    margin-bottom: 1rem;
-}
-
-.job-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #f0f0f0;
-    padding-top: 1rem;
-}
-
-.job-posted {
-    color: #999;
-}
-
-.btn-secondary {
-    background-color: #808080;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    text-decoration: none;
-    border-radius: 4px;
-    display: inline-block;
-    transition: background-color 0.3s;
-}
-
-.btn-secondary:hover {
-    background-color: #666;
-}
-
-.btn-apply {
-    background-color: #c41e3a;
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
-    display: inline-block;
-}
-
-.btn-apply:hover {
-    background-color: #a01729;
-}
-
-.eligibility-status {
+.verification-banner {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
-
-.eligibility-status h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.1rem;
-    color: #333;
+.verification-banner h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
-
 .status-grid {
     display: flex;
-    gap: 2rem;
+    gap: 1rem;
     flex-wrap: wrap;
 }
-
-.status-item {
+.status-card {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 240px;
 }
+.status-card p { margin: 0.25rem 0 0; font-size: 0.9rem; color: #555; }
+.status-card strong { font-size: 1rem; }
+.status-ok { background: #d4edda; border: 1px solid #c3e6cb; }
+.status-pending { background: #fff3cd; border: 1px solid #ffeeba; }
+.status-locked { background: #f8f9fa; border: 1px solid #dee2e6; }
+.status-icon { font-size: 1.4rem; line-height: 1; }
+.verify-link { color: #c41e3a; font-weight: 600; text-decoration: underline; }
 
-.status-label {
-    font-weight: 600;
-    color: #555;
+.jobs-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.job-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 4px solid #c41e3a;
+    border-radius: 6px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s;
 }
+.job-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+.job-signed-up { border-left-color: #28a745; background: #f8fff9; }
 
-.badge-verified {
-    background: #28a745;
+.job-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+.job-top h3 { margin: 0 0 0.4rem; color: #222; font-size: 1.1rem; }
+.signup-action { flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+
+.btn-signup {
+    background: #c41e3a;
     color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
+    border: none;
+    padding: 0.55rem 1.4rem;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
 }
+.btn-signup:hover { background: #a01729; }
 
-.badge-pending {
-    background: #ffc107;
-    color: #333;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
+.signed-up-label {
+    color: #28a745;
+    font-weight: 700;
+    font-size: 0.95rem;
 }
-
-.badge-not-verified {
-    background: #6c757d;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
+.btn-cancel-signup {
+    background: none;
+    border: 1px solid #ccc;
+    color: #666;
+    padding: 0.4rem 0.9rem;
+    border-radius: 50px;
     font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
 }
+.btn-cancel-signup:hover { border-color: #dc3545; color: #dc3545; }
 
-.btn-small-link {
-    color: #c41e3a;
-    text-decoration: underline;
-    font-size: 0.9rem;
+.btn-get-verified {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.btn-get-verified:hover { background: #ffeeba; }
+
+.badge-pending-small {
+    background: #fff3cd;
+    color: #856404;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
     font-weight: 600;
 }
 
-.btn-small-link:hover {
-    color: #a01729;
-}
+.badge { padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; display: inline-block; }
+.badge-general { background: #e9ecef; color: #495057; }
+.badge-special { background: #fff3cd; color: #856404; font-weight: 600; }
+
+.job-desc { color: #555; font-size: 0.95rem; line-height: 1.6; margin: 0 0 0.5rem; }
+.job-meta { color: #aaa; font-size: 0.82rem; margin: 0; }
+
+.empty-state { text-align: center; padding: 3rem; color: #888; font-size: 1rem; }
 </style>
 {% endblock %}
