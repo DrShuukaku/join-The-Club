@@ -5,6 +5,11 @@
 {% block content %}
 <div class="container dashboard">
     <h1>Welcome, {{ current_user.first_name or 'Parent' }}!</h1>
+    {% if not current_user.first_name %}
+    <p style="margin: -0.5rem 0 1.5rem; font-size: 0.9rem; color: #888;">
+        Want to see your name here? <a href="{{ url_for('parent_profile') }}" style="color: #c41e3a; font-weight: 600;">Set your name in your profile →</a>
+    </p>
+    {% endif %}
     
     <section class="dashboard-section">
         <div class="volunteer-status-card">

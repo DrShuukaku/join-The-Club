@@ -23,11 +23,24 @@
             </div>
         </div>
         
-        <h3>Update Classroom</h3>
+        <h3>Update Your Information</h3>
         <form method="POST" action="{{ url_for('update_profile') }}" class="form-container">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control"
+                           value="{{ current_user.first_name or '' }}" placeholder="e.g., Maria" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control"
+                           value="{{ current_user.last_name or '' }}" placeholder="e.g., Garcia">
+                </div>
+            </div>
+
             <div class="form-group">
-                <label for="classroom">Select Your Child's Classroom</label>
-                <select id="classroom" name="classroom" class="form-control" required>
+                <label for="classroom">Child's Classroom</label>
+                <select id="classroom" name="classroom" class="form-control">
                     <option value="">-- Select Classroom --</option>
                     <option value="Kindergarten" {% if current_user.classroom == 'Kindergarten' %}selected{% endif %}>Kindergarten</option>
                     <option value="1st Grade" {% if current_user.classroom == '1st Grade' %}selected{% endif %}>1st Grade</option>
@@ -40,14 +53,25 @@
                     <option value="8th Grade" {% if current_user.classroom == '8th Grade' %}selected{% endif %}>8th Grade</option>
                     <option value="Other" {% if current_user.classroom == 'Other' %}selected{% endif %}>Other</option>
                 </select>
-                <small class="form-text">This helps teachers track their classroom parents' volunteer hours and paperwork</small>
+                <small class="form-text">This helps teachers track classroom parents' volunteer hours and paperwork</small>
             </div>
-            
+
             <div class="action-buttons">
-                <button type="submit" class="btn-primary">Update Classroom</button>
+                <button type="submit" class="btn-primary">Save Changes</button>
                 <a href="{{ url_for('parent_dashboard') }}" class="btn-secondary">Cancel</a>
             </div>
         </form>
+
+<style>
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+}
+</style>
     </section>
 </div>
 {% endblock %}

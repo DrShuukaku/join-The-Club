@@ -145,13 +145,21 @@ def parent_profile():
 @app.route('/parent/profile/update', methods=['POST'])
 @require_login
 def update_profile():
-    classroom = request.form.get('classroom')
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    classroom = request.form.get('classroom', '').strip()
+
+    if not first_name:
+        flash('Please enter your first name.', 'danger')
+        return redirect(url_for('parent_profile'))
+
+    current_user.first_name = first_name
+    current_user.last_name = last_name or None
     if classroom:
         current_user.classroom = classroom
-        db.session.commit()
-        flash(f'Your classroom has been updated to {classroom}', 'success')
-    else:
-        flash('Please select a classroom', 'danger')
+
+    db.session.commit()
+    flash('Your profile has been updated.', 'success')
     return redirect(url_for('parent_profile'))
 
 @app.route('/admin/dashboard')
