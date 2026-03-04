@@ -6,10 +6,23 @@
 <div class="container dashboard">
     <h1>All Parents Service Hours Dashboard</h1>
     
-    <div class="action-buttons" style="margin-bottom: 2rem;">
-        <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Admin Dashboard</a>
-        <a href="{{ url_for('admin_labor_verification') }}" class="btn-secondary">Labor Verification</a>
+    <div class="action-buttons" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Admin Dashboard</a>
+            <a href="{{ url_for('admin_labor_verification') }}" class="btn-secondary">Labor Verification</a>
+        </div>
+        <form method="POST" action="{{ url_for('admin_reset_labor_hours') }}" id="reset-form">
+            <button type="button" class="btn-danger" onclick="confirmReset()">Reset All Hours</button>
+        </form>
     </div>
+
+<script>
+function confirmReset() {
+    if (confirm('This will permanently delete ALL labor hour records for every parent. This cannot be undone.\n\nAre you sure you want to continue?')) {
+        document.getElementById('reset-form').submit();
+    }
+}
+</script>
     
     <section class="dashboard-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">

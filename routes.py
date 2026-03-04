@@ -654,6 +654,17 @@ def admin_service_hours_dashboard():
                          classrooms=classrooms,
                          selected_classroom=selected_classroom)
 
+@app.route('/admin/reset-labor-hours', methods=['POST'])
+@require_login
+def admin_reset_labor_hours():
+    if not current_user.is_admin:
+        flash('You do not have permission to perform this action.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+    deleted = LaborHours.query.delete()
+    db.session.commit()
+    flash(f'All labor hours have been reset. {deleted} record(s) deleted.', 'success')
+    return redirect(url_for('admin_service_hours_dashboard'))
+
 @app.route('/parent/jobs')
 @require_login
 def parent_view_jobs():
