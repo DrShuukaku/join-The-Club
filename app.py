@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 import os
@@ -17,7 +17,14 @@ class Base(DeclarativeBase):
     pass
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+
+session_secret = os.environ.get("SESSION_SECRET")
+if not session_secret:
+    logging.error("SESSION_SECRET environment variable is not set!")
+    logging.error("Please set a strong random value in Replit's Secrets tab.")
+    raise RuntimeError("SESSION_SECRET environment variable is required. Please set it in Secrets.")
+app.secret_key = session_secret
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 database_url = os.environ.get("DATABASE_URL")
@@ -98,12 +105,15 @@ def ensure_db_initialized():
 
 @app.errorhandler(500)
 def internal_error(error):
-    """Log internal server errors with full details."""
+    """Log full details server-side only; never show them to the visitor."""
     logging.error(f"Internal Server Error: {error}", exc_info=True)
-    return f"<h1>Internal Server Error</h1><p>Error details: {str(error)}</p><pre>{error.__class__.__name__}</pre>", 500
+    return render_template("500.html"), 500
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    """Log all unhandled exceptions."""
+    """Log full details server-side only; never show them to the visitor."""
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
     logging.error(f"Unhandled exception: {e}", exc_info=True)
-    return f"<h1>Error</h1><p>{str(e)}</p>", 500
+    return render_template("500.html"), 500

@@ -485,8 +485,12 @@ def make_admin():
     return redirect(url_for('index'))
 
 @app.route('/debug/auth-status')
+@require_login
 def debug_auth_status():
     """Debugging route to check authentication status"""
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
     admin_emails_list = [email.strip().lower() for email in os.environ.get('ADMIN_EMAILS', '').split(',') if email.strip()]
     status = {
         'authenticated': current_user.is_authenticated if current_user else False,
@@ -500,8 +504,12 @@ def debug_auth_status():
     return jsonify(status)
 
 @app.route('/test-login')
+@require_login
 def test_login_page():
     """Test page to try login"""
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
     return '''
     <!DOCTYPE html>
     <html>
