@@ -14,3 +14,31 @@ mtime_ms = 1790654836279
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:170ed59e-fa0e-47b7-ac10-b644992f5b4f/4c6cad95-132b-4b6b-ba4f-cc3e5370553c/783bcf43-4a10-418a-ae94-31add776fe69"
 storage_version_token = "1790654854730159"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "ProG-pAyNBaFZDculuKa1"
+uri = "file://attached_assets/saint_philip_neri_project_overview.pptx"
+type = "slides"
+title = "Saint Philip Neri Project Overview — PowerPoint"
+description = "Eight-slide editable deck for presenting the parent and admin workflows."
+logical_id = "bf0df8e3-ed5e-45f2-9caf-8a9bdbec5f09"
+content_hash = "sha256:f7a5089c5c8bb9983751dbc39f23a1601b9c8ef8ac2970542651b3ed9f9762cb"
+size = 101432
+mtime_ms = 1790655591365
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:170ed59e-fa0e-47b7-ac10-b644992f5b4f/bf0df8e3-ed5e-45f2-9caf-8a9bdbec5f09/b673ca7f-6302-49f7-a6b7-a5de7eb83162"
+storage_version_token = "1790655618295795"
+content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+[[outputs]]
+id = "zy_rcnZuclPuGJgREQvuB"
+uri = "file://attached_assets/saint_philip_neri_project_overview.pdf"
+type = "pdf"
+title = "Saint Philip Neri Project Overview — PDF"
+description = "Shareable PDF copy of the eight-slide presentation."
+logical_id = "2ae5946b-fe5b-4af1-9931-9ae4e39d08b7"
+content_hash = "sha256:d7b12f237579874827b01dcb7fc40453089f33f8deacd8eaf62195a95e1bfd54"
+size = 618340
+mtime_ms = 1790655591581
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:170ed59e-fa0e-47b7-ac10-b644992f5b4f/2ae5946b-fe5b-4af1-9931-9ae4e39d08b7/8d05aca7-6334-438c-9ad4-6aaa264bcc08"
+storage_version_token = "1790655619146477"
+content_type = "application/pdf"
