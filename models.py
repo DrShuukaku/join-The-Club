@@ -89,6 +89,20 @@ class LaborHours(db.Model):
             return round(delta.total_seconds() / 3600, 2)
         return 0
 
+class VolunteerRequirement(db.Model):
+    __tablename__ = 'volunteer_requirements'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False, unique=True)
+    label = db.Column(db.String(200), nullable=True)
+    required_hours = db.Column(db.Float, nullable=False)
+    period_start = db.Column(db.Date, nullable=False)
+    period_end = db.Column(db.Date, nullable=False)
+    set_by_admin_id = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    user = db.relationship('User')
+
 class Job(db.Model):
     __tablename__ = 'jobs'
     id = db.Column(db.Integer, primary_key=True)

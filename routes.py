@@ -7,7 +7,7 @@ import qrcode
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
 from flask_login import current_user
-from models import User, Form, Submission, LaborHours, Job, JobEligibility, JobApplication, JobSignup
+from models import User, Form, Submission, LaborHours, Job, JobEligibility, JobApplication, JobSignup, VolunteerRequirement
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 ALLOWED_MIMETYPES = {
@@ -23,6 +23,37 @@ def allowed_file(filename, mimetype):
         return False
     extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
     return extension in ALLOWED_EXTENSIONS and mimetype in ALLOWED_MIMETYPES
+
+def get_requirement_progress(user):
+    """Return progress info for a parent's current volunteer-hour requirement, or None if none is set."""
+    requirement = VolunteerRequirement.query.filter_by(user_id=user.id).first()
+    if not requirement:
+        return None
+
+    today = datetime.now().date()
+
+    completed_hours = db.session.query(db.func.coalesce(db.func.sum(LaborHours.hours_worked), 0)).filter(
+        LaborHours.user_id == user.id,
+        LaborHours.status == 'verified',
+        db.func.date(LaborHours.check_in_time) >= requirement.period_start,
+        db.func.date(LaborHours.check_in_time) <= requirement.period_end,
+    ).scalar() or 0
+
+    percent = 0
+    if requirement.required_hours > 0:
+        percent = min(100, round((completed_hours / requirement.required_hours) * 100))
+
+    days_remaining = (requirement.period_end - today).days
+
+    return {
+        'requirement': requirement,
+        'completed_hours': round(completed_hours, 2),
+        'remaining_hours': max(0, round(requirement.required_hours - completed_hours, 2)),
+        'percent': percent,
+        'is_complete': completed_hours >= requirement.required_hours,
+        'is_overdue': today > requirement.period_end and completed_hours < requirement.required_hours,
+        'days_remaining': days_remaining,
+    }
 
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
@@ -88,12 +119,13 @@ def parent_dashboard():
         elif child_app.status == 'rejected':
             fp_status = 'rejected'
 
-    return render_template('parent_dashboard.html', 
+    return render_template('parent_dashboard.html',
                          pending_forms=pending_forms,
                          completed_forms=completed_forms,
                          is_verified_child=is_verified_child,
                          bg_status=bg_status,
-                         fp_status=fp_status)
+                         fp_status=fp_status,
+                         requirement_progress=get_requirement_progress(current_user))
 
 @app.route('/parent/submit/<int:form_id>', methods=['GET', 'POST'])
 @require_login
@@ -320,7 +352,8 @@ def parent_labor_hours():
                          labor_records=labor_records,
                          active_session=active_session,
                          total_hours=total_hours,
-                         available_jobs=available_jobs)
+                         available_jobs=available_jobs,
+                         requirement_progress=get_requirement_progress(current_user))
 
 @app.route('/parent/labor/check-in', methods=['POST'])
 @require_login
@@ -876,14 +909,98 @@ def verify_parent_category(parent_id, category):
 def revoke_parent_category(parent_id, category):
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
-    
+
     eligibility = JobEligibility.query.filter_by(user_id=parent_id, category=category).first()
     if eligibility:
         db.session.delete(eligibility)
         db.session.commit()
         flash(f'Verification revoked.', 'success')
-    
+
     return redirect(url_for('admin_parent_verification'))
+
+@app.route('/admin/volunteer-requirements')
+@require_login
+def admin_volunteer_requirements():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+
+    all_parents = User.query.filter_by(is_admin=False).order_by(User.first_name).all()
+    requirements = {r.user_id: r for r in VolunteerRequirement.query.all()}
+
+    parent_rows = []
+    for parent in all_parents:
+        requirement = requirements.get(parent.id)
+        progress = get_requirement_progress(parent) if requirement else None
+        parent_rows.append({'parent': parent, 'requirement': requirement, 'progress': progress})
+
+    return render_template('admin_volunteer_requirements.html', parent_rows=parent_rows)
+
+@app.route('/admin/volunteer-requirements/<parent_id>/set', methods=['POST'])
+@require_login
+def set_volunteer_requirement(parent_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to perform this action.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+
+    parent = User.query.get_or_404(parent_id)
+    label = request.form.get('label', '').strip()
+    required_hours_str = request.form.get('required_hours', '').strip()
+    period_start_str = request.form.get('period_start', '').strip()
+    period_end_str = request.form.get('period_end', '').strip()
+
+    try:
+        required_hours = float(required_hours_str)
+        period_start = datetime.strptime(period_start_str, '%Y-%m-%d').date()
+        period_end = datetime.strptime(period_end_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        flash('Please provide a valid number of hours and both dates.', 'danger')
+        return redirect(url_for('admin_volunteer_requirements'))
+
+    if period_end < period_start:
+        flash('The end date must be on or after the start date.', 'danger')
+        return redirect(url_for('admin_volunteer_requirements'))
+
+    if required_hours <= 0:
+        flash('Required hours must be greater than zero.', 'danger')
+        return redirect(url_for('admin_volunteer_requirements'))
+
+    requirement = VolunteerRequirement.query.filter_by(user_id=parent_id).first()
+    if requirement:
+        requirement.label = label or None
+        requirement.required_hours = required_hours
+        requirement.period_start = period_start
+        requirement.period_end = period_end
+        requirement.set_by_admin_id = current_user.id
+    else:
+        requirement = VolunteerRequirement(
+            user_id=parent_id,
+            label=label or None,
+            required_hours=required_hours,
+            period_start=period_start,
+            period_end=period_end,
+            set_by_admin_id=current_user.id
+        )
+        db.session.add(requirement)
+
+    db.session.commit()
+    flash(f'Volunteer hour requirement set for {parent.first_name or parent.email}.', 'success')
+    return redirect(url_for('admin_volunteer_requirements'))
+
+@app.route('/admin/volunteer-requirements/<parent_id>/clear', methods=['POST'])
+@require_login
+def clear_volunteer_requirement(parent_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to perform this action.', 'danger')
+        return redirect(url_for('parent_dashboard'))
+
+    requirement = VolunteerRequirement.query.filter_by(user_id=parent_id).first()
+    if requirement:
+        db.session.delete(requirement)
+        db.session.commit()
+        flash('Requirement cleared.', 'success')
+
+    return redirect(url_for('admin_volunteer_requirements'))
 
 @app.route('/parent/notifications')
 @require_login

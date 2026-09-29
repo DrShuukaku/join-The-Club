@@ -45,6 +45,29 @@
             <div style="margin-top: 1.5rem;">
                 <a href="{{ url_for('parent_view_jobs') }}" class="btn-primary" style="background-color: #eee097; color: #333; border-color: #eee097; border-radius: 50px;">View & Sign Up for Events</a>
             </div>
+
+            {% if requirement_progress %}
+            <div class="dash-req-progress">
+                <div class="dash-req-header">
+                    <span>{{ requirement_progress.requirement.label or 'Volunteer Hours' }}</span>
+                    <span>{{ requirement_progress.completed_hours }} / {{ requirement_progress.requirement.required_hours|round(1) }} hrs</span>
+                </div>
+                <div class="req-progress-bar-large">
+                    <div class="req-progress-fill-large {% if requirement_progress.is_complete %}complete{% elif requirement_progress.is_overdue %}overdue{% endif %}"
+                         style="width: {{ requirement_progress.percent }}%;"></div>
+                </div>
+                <small style="color: #666;">
+                    {% if requirement_progress.is_complete %}
+                        ✓ Requirement met for this period!
+                    {% elif requirement_progress.is_overdue %}
+                        Past due by {{ -requirement_progress.days_remaining }} day(s) — {{ requirement_progress.remaining_hours }} hours short.
+                    {% else %}
+                        Due {{ requirement_progress.requirement.period_end.strftime('%B %d, %Y') }} ({{ requirement_progress.days_remaining }} days left).
+                        <a href="{{ url_for('parent_labor_hours') }}">Log hours →</a>
+                    {% endif %}
+                </small>
+            </div>
+            {% endif %}
         </div>
     </section>
 
@@ -142,6 +165,43 @@
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.85rem;
+}
+
+.dash-req-progress {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #eee;
+}
+
+.dash-req-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.req-progress-bar-large {
+    width: 100%;
+    height: 14px;
+    background: #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.req-progress-fill-large {
+    height: 100%;
+    background: #c41e3a;
+    transition: width 0.3s;
+}
+
+.req-progress-fill-large.complete {
+    background: #28a745;
+}
+
+.req-progress-fill-large.overdue {
+    background: #dc3545;
 }
 </style>
 {% endblock %}
