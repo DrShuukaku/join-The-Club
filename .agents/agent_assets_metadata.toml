@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "rDfGn35SbhUz0PIRwHhEY"
+uri = "file://attached_assets/school_paperwork_overview.mp4"
+type = "video"
+title = "School Paperwork — Animated Overview"
+description = "28-second animated walkthrough of parent forms, volunteer jobs, labor hours, and admin verification. Silent, 16:9 MP4."
+logical_id = "4c6cad95-132b-4b6b-ba4f-cc3e5370553c"
+content_hash = "sha256:4bf05f1e57147f29d54051267202aa746a3d7d240f933928a33db010647f3588"
+size = 308777
+mtime_ms = 1790654836279
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:170ed59e-fa0e-47b7-ac10-b644992f5b4f/4c6cad95-132b-4b6b-ba4f-cc3e5370553c/783bcf43-4a10-418a-ae94-31add776fe69"
+storage_version_token = "1790654854730159"
+content_type = "video/mp4"
